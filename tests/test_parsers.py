@@ -7,9 +7,9 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from quota import accounts, claude, codex, grok, jsonutil, paths
-from quota.formatting import countdown
-from quota.models import Account, AccountIdentity, ProviderIssue, ProviderSnapshot, UsageWindow, usage_level
+from quotax import accounts, claude, codex, grok, jsonutil, paths
+from quotax.formatting import countdown
+from quotax.models import Account, AccountIdentity, ProviderIssue, ProviderSnapshot, UsageWindow, usage_level
 
 os.environ["LANGUAGE"] = "en"
 
@@ -319,7 +319,7 @@ class AccountTests(unittest.TestCase):
             self.assertEqual([item.provider for item in loaded], ["claude", "codex", "grok"])
             self.assertEqual(loaded[2], account)
             self.assertNotIn("token", paths.accounts_file().read_text())
-            self.assertTrue(str(account.home).endswith(f"quota/accounts/grok/{account.id}"))
+            self.assertTrue(str(account.home).endswith(f"quotax/accounts/grok/{account.id}"))
             self.assertIsNone(Account("claude", "cli").home)
 
     def test_rejects_account_ids_that_are_not_uuids(self):
@@ -341,8 +341,8 @@ class CatalogTests(unittest.TestCase):
     ROOT = Path(__file__).resolve().parent.parent
 
     def test_italian_catalog_covers_every_string(self):
-        catalog = json.loads((self.ROOT / "quota/locale/it.json").read_text(encoding="utf-8"))
-        sources = [*self.ROOT.glob("quota/*.py"), *self.ROOT.glob("extension/*.js")]
+        catalog = json.loads((self.ROOT / "quotax/locale/it.json").read_text(encoding="utf-8"))
+        sources = [*self.ROOT.glob("quotax/*.py"), *self.ROOT.glob("extension/*.js")]
         pattern = re.compile(r"""\b_\(\s*(["'])((?:\\.|(?!\1).)*)\1""")
         keys = set()
         for source in sources:

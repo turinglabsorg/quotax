@@ -207,7 +207,7 @@ class ClaudeFetcher:
             raise ProviderIssue.session_expired(_("Session expired: unlink and relink the account."))
         return self._snapshot(refreshed[1])
 
-    # Accounts signed in by Quota are not used by any running CLI, so Quota can rotate their tokens itself.
+    # Accounts signed in by Quotax are not used by any running CLI, so Quotax can rotate their tokens itself.
     def _refresh(self, stored: bytes, file: Path) -> tuple[bytes, ClaudeCredentials] | None:
         current = parse_credentials(stored)
         if current is None or not current.refresh_token:
@@ -244,9 +244,9 @@ class ClaudeFetcher:
 class SharedClaudeLogin:
     """The shared Claude Code login is owned by the CLI.
 
-    Quota never refreshes it itself, because the refresh token rotates and a running Claude Code
+    Quotax never refreshes it itself, because the refresh token rotates and a running Claude Code
     would be signed out. Instead it briefly starts `claude`, which renews its own token on disk,
-    and waits for the new token to appear. One attempt at a time across Quota processes, with a
+    and waits for the new token to appear. One attempt at a time across Quotax processes, with a
     10-minute cooldown after a failure.
     """
 
@@ -264,7 +264,7 @@ class SharedClaudeLogin:
             try:
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:
-                # Another Quota process is renewing: wait for it and use what it produced.
+                # Another Quotax process is renewing: wait for it and use what it produced.
                 fcntl.flock(lock, fcntl.LOCK_EX)
                 return cls._renewed(replacing)
             failure_file = state / "claude-renewal-failed"

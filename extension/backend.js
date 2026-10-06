@@ -6,7 +6,7 @@ Gio._promisify(Gio.Subprocess.prototype, 'wait_async');
 
 const SIGTERM = 15;
 
-// Runs the bundled Python backend (`quota <command> --json`) and streams its JSON events.
+// Runs the bundled Python backend (`quotax <command> --json`) and streams its JSON events.
 // Nothing here blocks the shell: every command is a subprocess read asynchronously.
 export class Backend {
     constructor(extensionPath) {
@@ -22,7 +22,7 @@ export class Backend {
         });
         launcher.setenv('PYTHONPATH', this._pythonPath, true);
         launcher.set_cwd(GLib.get_home_dir());
-        const proc = launcher.spawnv(['python3', '-B', '-m', 'quota', ...args, '--json']);
+        const proc = launcher.spawnv(['python3', '-B', '-m', 'quotax', ...args, '--json']);
         this._processes.add(proc);
         const cancelId = cancellable?.connect(() => proc.send_signal(SIGTERM)) ?? 0;
         const input = new Gio.DataInputStream({base_stream: proc.get_stdout_pipe(), close_base_stream: true});

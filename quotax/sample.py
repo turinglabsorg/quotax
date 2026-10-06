@@ -1,4 +1,4 @@
-"""Sample data for screenshots and UI work (`QUOTA_SAMPLE=1`). Never touches the network or the CLIs."""
+"""Sample data for screenshots and UI work (`QUOTAX_SAMPLE=1`). Never touches the network or the CLIs."""
 
 import os
 import time
@@ -10,7 +10,7 @@ PLANS = {"claude": "Team", "codex": "Plus", "grok": "SuperGrok"}
 
 
 def enabled() -> bool:
-    return bool(os.environ.get("QUOTA_SAMPLE"))
+    return bool(os.environ.get("QUOTAX_SAMPLE"))
 
 
 def identity(provider: str) -> AccountIdentity:

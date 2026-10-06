@@ -1,6 +1,0 @@
-{
-  "uuid": "quota-preview@turinglabs.org",
-  "name": "Quota preview",
-  "description": "Development helper for scripts/preview.sh: opens Quota's menu, takes screenshots and quits the shell.",
-  "shell-version": ["48", "49", "50"]
-}

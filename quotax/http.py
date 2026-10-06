@@ -7,7 +7,7 @@ import urllib.request
 from .models import ProviderIssue
 
 TIMEOUT = 15
-USER_AGENT = "Quota/1.0 (Linux)"
+USER_AGENT = "Quotax/1.0 (Linux)"
 
 # No cookie jar and no cache: every request carries only the headers given here.
 _opener = urllib.request.build_opener()
@@ -36,7 +36,7 @@ def _send(request: urllib.request.Request) -> bytes:
     except (urllib.error.URLError, OSError, ValueError):
         raise ProviderIssue("network") from None
 
-    debug = os.environ.get("QUOTA_DEBUG")
+    debug = os.environ.get("QUOTAX_DEBUG")
     if debug and (debug == "verbose" or not 200 <= status < 300):
         body = data[: 4_000 if debug == "verbose" else 300].decode("utf-8", "replace")
         host = urllib.parse.urlsplit(request.full_url).hostname or ""

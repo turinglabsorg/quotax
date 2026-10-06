@@ -39,7 +39,7 @@ class QuotaNaturalHeightList extends St.BoxLayout {
 export const QuotaIndicator = GObject.registerClass(
 class QuotaIndicator extends PanelMenu.Button {
     _init({store, accounts, linker, settings}) {
-        super._init(0.5, 'Quota');
+        super._init(0.5, 'Quotax');
         this._store = store;
         this._accounts = accounts;
         this._linker = linker;
@@ -50,7 +50,7 @@ class QuotaIndicator extends PanelMenu.Button {
         this._scroll = null;
         this._scrolledPage = null;
 
-        this.accessible_name = 'Quota';
+        this.accessible_name = 'Quotax';
         this._panelBox = new St.BoxLayout({style_class: 'quota-panel-box', y_align: Clutter.ActorAlign.CENTER});
         this.add_child(this._panelBox);
 
@@ -174,7 +174,7 @@ class QuotaIndicator extends PanelMenu.Button {
 
         const header = new St.BoxLayout({style_class: 'quota-header'});
         const titles = new St.BoxLayout({orientation: VERTICAL, x_expand: true});
-        titles.add_child(new St.Label({text: 'Quota', style_class: 'quota-title'}));
+        titles.add_child(new St.Label({text: 'Quotax', style_class: 'quota-title'}));
         titles.add_child(secondary(this._subtitle(now)));
         header.add_child(titles);
         if (this._store.isRefreshing) {
@@ -297,7 +297,7 @@ class QuotaIndicator extends PanelMenu.Button {
             const actions = new St.BoxLayout({style_class: 'quota-actions'});
             const source = account.source === 'cli'
                 ? _('Uses the {name} login', {name: CLI_NAMES[account.provider]})
-                : _('Linked by Quota');
+                : _('Linked by Quotax');
             const sourceText = secondary(source);
             sourceText.x_expand = true;
             sourceText.y_align = Clutter.ActorAlign.CENTER;
@@ -374,7 +374,7 @@ class QuotaIndicator extends PanelMenu.Button {
         this._addScrollableList(list);
 
         this._content.add_child(wrapped(
-            _("Sign-in happens in your browser, on the service's official page: Quota never sees your password. Each new account stays separate from your CLI logins."),
+            _("Sign-in happens in your browser, on the service's official page: Quotax never sees your password. Each new account stays separate from your CLI logins."),
             'quota-footnote'));
     }
 
@@ -485,7 +485,7 @@ class QuotaIndicator extends PanelMenu.Button {
 function sourceLabel(account) {
     return account.source === 'cli'
         ? _('{name} login', {name: CLI_NAMES[account.provider]})
-        : _('linked by Quota');
+        : _('linked by Quotax');
 }
 
 function secondary(text) {

@@ -17,7 +17,7 @@ CLI_NAMES = {"claude": "Claude Code", "codex": "Codex", "grok": "Grok"}
 @dataclass
 class Account:
     provider: str
-    source: str  # "cli" reuses the CLI's own login, "managed" was signed in by Quota
+    source: str  # "cli" reuses the CLI's own login, "managed" was signed in by Quotax
     email: str | None = None
     plan: str | None = None
     id: str = field(default_factory=lambda: str(uuid.uuid4()).upper())
@@ -30,7 +30,7 @@ class Account:
     def source_label(self) -> str:
         if self.source == "cli":
             return _("{name} login", name=CLI_NAMES[self.provider])
-        return _("linked by Quota")
+        return _("linked by Quotax")
 
     def to_json(self) -> dict:
         return {"id": self.id, "provider": self.provider, "source": self.source, "email": self.email, "plan": self.plan}

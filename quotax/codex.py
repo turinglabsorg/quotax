@@ -144,7 +144,7 @@ def rpc_call(executable: Path, home: Path | None, methods: list[str], timeout: f
             raise ProviderIssue("invalidResponse") from None
 
     try:
-        send({"jsonrpc": "2.0", "id": 0, "method": "initialize", "params": {"clientInfo": {"name": "quota", "version": "1.0.0"}}})
+        send({"jsonrpc": "2.0", "id": 0, "method": "initialize", "params": {"clientInfo": {"name": "quotax", "version": "1.0.0"}}})
         buffer = b""
         fd = child.stdout.fileno()
         while len(response.results) + len(response.errors) < len(methods):

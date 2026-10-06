@@ -10,15 +10,15 @@ def _xdg(variable: str, fallback: str) -> Path:
 
 
 def config_dir() -> Path:
-    return _xdg("XDG_CONFIG_HOME", ".config") / "quota"
+    return _xdg("XDG_CONFIG_HOME", ".config") / "quotax"
 
 
 def data_dir() -> Path:
-    return _xdg("XDG_DATA_HOME", ".local/share") / "quota"
+    return _xdg("XDG_DATA_HOME", ".local/share") / "quotax"
 
 
 def state_dir() -> Path:
-    return _xdg("XDG_STATE_HOME", ".local/state") / "quota"
+    return _xdg("XDG_STATE_HOME", ".local/state") / "quotax"
 
 
 def accounts_file() -> Path:

@@ -1,6 +1,6 @@
 import GLib from 'gi://GLib';
 
-// Same catalog as the Python backend (backend/quota/locale/<language>.json): keys are the English
+// Same catalog as the Python backend (backend/quotax/locale/<language>.json): keys are the English
 // strings and `{name}` placeholders are filled after translation.
 let catalog = {};
 

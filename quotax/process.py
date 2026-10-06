@@ -32,7 +32,7 @@ class Result:
 _children: set[subprocess.Popen] = set()
 _children_lock = threading.Lock()
 
-# Quota runs each CLI as a fresh terminal would: credentials handed down by a parent agent
+# Quotax runs each CLI as a fresh terminal would: credentials handed down by a parent agent
 # (or the Claude desktop app) must not stand in for the login stored on disk.
 _INHERITED_PREFIXES = ("CLAUDE", "ANTHROPIC_")
 

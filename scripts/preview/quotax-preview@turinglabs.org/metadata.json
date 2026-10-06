@@ -1,0 +1,6 @@
+{
+  "uuid": "quotax-preview@turinglabs.org",
+  "name": "Quotax preview",
+  "description": "Development helper for scripts/preview.sh: opens Quotax's menu, takes screenshots and quits the shell.",
+  "shell-version": ["48", "49", "50"]
+}

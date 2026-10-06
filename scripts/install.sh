@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Installs the Quota GNOME Shell extension (with its Python backend) and the `quota` command.
+# Installs the Quotax GNOME Shell extension (with its Python backend) and the `quotax` command.
 #   scripts/install.sh              install or update
 #   scripts/install.sh --uninstall  remove the extension and the command (linked accounts are kept)
 set -euo pipefail
 
-UUID=quota@turinglabs.org
+UUID=quotax@turinglabs.org
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 TARGET=${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/$UUID
-COMMAND=$HOME/.local/bin/quota
+COMMAND=$HOME/.local/bin/quotax
 
 # Adds or removes the extension in org.gnome.shell enabled-extensions, keeping every other entry.
 set_enabled() {
@@ -26,24 +26,24 @@ if [[ ${1:-} == --uninstall ]]; then
     gnome-extensions disable "$UUID" 2>/dev/null || true
     set_enabled 0
     rm -rf "$TARGET" "$COMMAND"
-    echo "Quota removed. Linked accounts are still in ~/.config/quota and ~/.local/share/quota."
+    echo "Quotax removed. Linked accounts are still in ~/.config/quotax and ~/.local/share/quotax."
     exit 0
 fi
 
-python3 -c 'import sys; sys.exit(sys.version_info < (3, 10))' || { echo "Quota needs Python 3.10 or later." >&2; exit 1; }
+python3 -c 'import sys; sys.exit(sys.version_info < (3, 10))' || { echo "Quotax needs Python 3.10 or later." >&2; exit 1; }
 command -v glib-compile-schemas >/dev/null || { echo "glib-compile-schemas is missing (package libglib2.0-bin)." >&2; exit 1; }
 
 rm -rf "$TARGET"
 mkdir -p "$TARGET/backend"
 cp -r "$ROOT"/extension/. "$TARGET"/
-cp -r "$ROOT/quota" "$TARGET/backend/"
+cp -r "$ROOT/quotax" "$TARGET/backend/"
 find "$TARGET" -name __pycache__ -prune -exec rm -rf {} +
 glib-compile-schemas "$TARGET/schemas"
 
 mkdir -p "$(dirname "$COMMAND")"
 cat > "$COMMAND" <<EOF
 #!/bin/sh
-PYTHONPATH="$TARGET/backend\${PYTHONPATH:+:\$PYTHONPATH}" exec python3 -B -m quota "\$@"
+PYTHONPATH="$TARGET/backend\${PYTHONPATH:+:\$PYTHONPATH}" exec python3 -B -m quotax "\$@"
 EOF
 chmod +x "$COMMAND"
 

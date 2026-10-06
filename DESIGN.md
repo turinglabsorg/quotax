@@ -1,6 +1,6 @@
-# Quota design system (Linux)
+# Quotax design system (Linux)
 
-Quota is a GNOME Shell top bar utility. It should feel like part of the shell: quiet in the top bar, dense and legible in the menu, never decorative for its own sake. It follows the macOS design system and adapts it to GNOME (Yaru and Adwaita shell themes, light and dark).
+Quotax is a GNOME Shell top bar utility. It should feel like part of the shell: quiet in the top bar, dense and legible in the menu, never decorative for its own sake. It follows the macOS design system and adapts it to GNOME (Yaru and Adwaita shell themes, light and dark).
 
 ## Principles
 
@@ -71,4 +71,4 @@ Custom stroked shapes drawn with Cairo in `extension/glyphs.js`, line width 15% 
 
 ## Copy
 
-UI copy is English with an Italian catalog (`quota/locale/it.json`, shared by the extension and the command line). Sentence case, short, no exclamation marks. Countdown format: `2h 10m`, `3d 4h` (`3g 4h` in Italian), `12m`. Relative time: `now`, `3 min ago`, `2 h ago`.
+UI copy is English with an Italian catalog (`quotax/locale/it.json`, shared by the extension and the command line). Sentence case, short, no exclamation marks. Countdown format: `2h 10m`, `3d 4h` (`3g 4h` in Italian), `12m`. Relative time: `now`, `3 min ago`, `2 h ago`.

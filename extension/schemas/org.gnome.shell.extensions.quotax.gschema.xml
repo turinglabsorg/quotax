@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema id="org.gnome.shell.extensions.quota" path="/org/gnome/shell/extensions/quota/">
+  <schema id="org.gnome.shell.extensions.quotax" path="/org/gnome/shell/extensions/quotax/">
     <key name="display-mode" type="s">
       <choices>
         <choice value="remaining"/>

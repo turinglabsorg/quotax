@@ -1,4 +1,4 @@
-"""`quota` command line. The GNOME Shell extension drives it with `--json`, which prints one JSON event per line."""
+"""`quotax` command line. The GNOME Shell extension drives it with `--json`, which prints one JSON event per line."""
 
 from __future__ import annotations
 
@@ -20,8 +20,8 @@ def main(argv: list[str] | None = None) -> int:
     for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
         signal.signal(sig, _stop)
 
-    parser = argparse.ArgumentParser(prog="quota", description="Remaining Claude, Codex and Grok subscription usage.")
-    parser.add_argument("--version", action="version", version=f"quota {__version__}")
+    parser = argparse.ArgumentParser(prog="quotax", description="Remaining Claude, Codex and Grok subscription usage.")
+    parser.add_argument("--version", action="version", version=f"quotax {__version__}")
     commands = parser.add_subparsers(dest="command")
     commands.add_parser("print", help="print usage for the linked accounts (default)")
     fetch_parser = commands.add_parser("fetch", help="fetch usage for the linked accounts")
@@ -104,7 +104,7 @@ def _fetch(ids: list[str] | None, as_json: bool) -> int:
 def _print() -> int:
     accounts = AccountStore.load()
     if not accounts:
-        print(_("No accounts linked in Quota: showing the CLI logins found on this computer.") + "\n")
+        print(_("No accounts linked in Quotax: showing the CLI logins found on this computer.") + "\n")
         for provider in PROVIDERS:
             if identity := detect_cli_login(provider):
                 accounts.append(Account(provider, "cli", identity.email, identity.plan))

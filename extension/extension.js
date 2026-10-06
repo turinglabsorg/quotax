@@ -8,7 +8,7 @@ import {AccountStore, LinkController, UsageStore} from './store.js';
 
 export default class QuotaExtension extends Extension {
     enable() {
-        loadCatalog(`${this.path}/backend/quota/locale`);
+        loadCatalog(`${this.path}/backend/quotax/locale`);
         this._settings = this.getSettings();
         this._backend = new Backend(this.path);
         this._accounts = new AccountStore();

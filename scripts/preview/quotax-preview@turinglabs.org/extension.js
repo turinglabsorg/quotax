@@ -1,5 +1,5 @@
 // Development helper for scripts/preview.sh, only ever loaded in a throwaway headless shell:
-// drives Quota's menu through its states, saves screenshots and quits.
+// drives Quotax's menu through its states, saves screenshots and quits.
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Shell from 'gi://Shell';
@@ -9,7 +9,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 Gio._promisify(Shell.Screenshot.prototype, 'screenshot_area');
 
-const QUOTA = 'quota@turinglabs.org';
+const QUOTAX = 'quotax@turinglabs.org';
 const MARGIN = 24;
 
 function sleep(milliseconds) {
@@ -27,17 +27,17 @@ async function until(condition, timeout = 15000) {
 export default class QuotaPreviewExtension extends Extension {
     enable() {
         this._run()
-            .catch(error => logError(error, 'Quota preview failed'))
+            .catch(error => logError(error, 'Quotax preview failed'))
             .finally(() => global.context.terminate());
     }
 
     disable() {}
 
     async _run() {
-        const directory = GLib.getenv('QUOTA_PREVIEW_DIR');
-        const variant = GLib.getenv('QUOTA_PREVIEW_VARIANT') ?? 'dark';
-        await until(() => Main.panel.statusArea[QUOTA]);
-        const indicator = Main.panel.statusArea[QUOTA];
+        const directory = GLib.getenv('QUOTAX_PREVIEW_DIR');
+        const variant = GLib.getenv('QUOTAX_PREVIEW_VARIANT') ?? 'dark';
+        await until(() => Main.panel.statusArea[QUOTAX]);
+        const indicator = Main.panel.statusArea[QUOTAX];
         await until(() => indicator._store.lastRefresh !== null && !indicator._store.isRefreshing);
         await sleep(500);
 

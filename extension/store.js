@@ -15,12 +15,12 @@ const AFTER_WAKE_DELAY = 5;
 const AFTER_RESET_DELAY = 20;
 
 // Linked accounts, read from the backend's accounts.json and reloaded whenever it changes,
-// including when it is changed from a terminal with the `quota` command.
+// including when it is changed from a terminal with the `quotax` command.
 export class AccountStore extends EventEmitter {
     constructor() {
         super();
         this.accounts = [];
-        const directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_config_dir(), 'quota']));
+        const directory = Gio.File.new_for_path(GLib.build_filenamev([GLib.get_user_config_dir(), 'quotax']));
         try {
             directory.make_directory_with_parents(null);
         } catch {
@@ -149,7 +149,7 @@ export class UsageStore extends EventEmitter {
                 this._apply(event);
             }, this._cancellable);
         } catch (error) {
-            logError(error, 'Quota: backend failed');
+            logError(error, 'Quotax: backend failed');
         }
         if (this._cancellable.is_cancelled())
             return;
@@ -253,7 +253,7 @@ export class LinkController extends EventEmitter {
                     found[event.provider] = event.identity;
             });
         } catch (error) {
-            logError(error, 'Quota: detection failed');
+            logError(error, 'Quotax: detection failed');
         }
         if (this._destroyed)
             return;
@@ -296,7 +296,7 @@ export class LinkController extends EventEmitter {
             } else if (event.type === 'linked' || event.type === 'error') {
                 outcome = event;
             }
-        }, cancellable).catch(error => logError(error, 'Quota: sign-in failed')).finally(async () => {
+        }, cancellable).catch(error => logError(error, 'Quotax: sign-in failed')).finally(async () => {
             if (this._destroyed || this._signIns[provider] !== attempt)
                 return;
             if (cancellable.is_cancelled()) {
