@@ -6,7 +6,7 @@ import time
 from .models import Account, AccountIdentity, ProviderSnapshot, UsageWindow
 
 EMAIL = "name@example.com"
-PLANS = {"claude": "Team", "codex": "Plus", "grok": "SuperGrok", "ollama": "Pro"}
+PLANS = {"claude": "Team", "codex": "Business", "grok": "SuperGrok", "ollama": "Max"}
 
 
 def enabled() -> bool:
