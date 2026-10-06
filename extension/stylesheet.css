@@ -1,0 +1,56 @@
+/* Quota: shared rules. stylesheet-dark.css and stylesheet-light.css import this file and add the
+   colors that depend on the shell's light or dark style (see DESIGN.md). */
+
+/* Top bar */
+.quota-panel-box { spacing: 10px; }
+.quota-panel-item { spacing: 4px; }
+.quota-panel-label { font-weight: 500; font-feature-settings: "tnum"; }
+.quota-panel-glyph { width: 14px; height: 14px; }
+.quota-panel-empty { width: 16px; height: 16px; }
+.quota-panel-item.level-warning { color: #ffa348; }
+.quota-panel-item.level-critical { color: #f66151; }
+
+/* Menu */
+.quota-content { width: 360px; padding: 2px 2px 4px 2px; }
+.quota-header { spacing: 6px; padding: 6px 6px 12px 12px; }
+.quota-title { font-weight: bold; }
+.quota-list { spacing: 8px; }
+.quota-secondary { font-size: 0.9em; }
+.quota-footnote { font-size: 0.9em; padding: 12px 12px 6px 12px; }
+
+.quota-card { border-radius: 14px; padding: 12px; spacing: 12px; }
+.quota-card-header { spacing: 8px; }
+.quota-card-title { font-weight: bold; }
+.quota-card-glyph { width: 15px; height: 15px; margin-top: 2px; }
+.quota-accent-claude { color: #d97757; }
+.quota-badge { font-size: 0.8em; font-weight: 600; padding: 2px 8px; border-radius: 99px; margin-top: 1px; max-width: 110px; }
+
+.quota-window { spacing: 5px; }
+.quota-window-line { spacing: 4px; }
+.quota-window-value { font-weight: bold; font-feature-settings: "tnum"; }
+.quota-bar { height: 6px; }
+.quota-bar.level-normal { -quota-fill-color: #33d17a; }
+.quota-bar.level-warning { -quota-fill-color: #ff7800; }
+.quota-bar.level-critical { -quota-fill-color: #e01b24; }
+
+.quota-actions { spacing: 8px; padding: 8px 10px; border-radius: 10px; }
+.quota-row { spacing: 8px; }
+.quota-sign-in { spacing: 8px; }
+.quota-linked { spacing: 4px; }
+.quota-issue { spacing: 6px; }
+.quota-issue-icon { icon-size: 14px; margin-top: 1px; }
+
+.quota-settings { spacing: 8px; }
+.quota-segments { spacing: 6px; }
+
+/* Controls */
+.quota-icon-button { padding: 7px; border-radius: 99px; }
+.quota-small-button { padding: 5px 12px; min-height: 0; border-radius: 99px; font-size: 0.9em; }
+.quota-button-box { spacing: 6px; }
+.quota-button-icon { icon-size: 14px; }
+.quota-segment { padding: 5px 8px; min-height: 0; border-radius: 99px; font-size: 0.9em; }
+.quota-link { color: -st-accent-color; font-size: 0.9em; padding: 2px 0; }
+.quota-link:hover { text-decoration: underline; }
+.quota-text-button { padding: 8px 12px; margin-top: 6px; border-radius: 99px; }
+.quota-text-button-box { spacing: 8px; }
+.quota-text-button-icon { icon-size: 14px; }

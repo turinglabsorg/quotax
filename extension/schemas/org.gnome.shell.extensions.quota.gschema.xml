@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.quota" path="/org/gnome/shell/extensions/quota/">
+    <key name="display-mode" type="s">
+      <choices>
+        <choice value="remaining"/>
+        <choice value="used"/>
+      </choices>
+      <default>'remaining'</default>
+      <summary>Percentage shown in the top bar and the menu</summary>
+      <description>"remaining" shows how much is left, "used" how much has been used.</description>
+    </key>
+  </schema>
+</schemalist>

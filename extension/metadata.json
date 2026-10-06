@@ -1,0 +1,9 @@
+{
+  "uuid": "quota@turinglabs.org",
+  "name": "Quota",
+  "description": "Shows how much of your Claude, Codex and Grok subscription limits you have left, at a glance.",
+  "shell-version": ["48", "49", "50"],
+  "settings-schema": "org.gnome.shell.extensions.quota",
+  "url": "https://github.com/turinglabsorg/quota-linux",
+  "version": 1
+}

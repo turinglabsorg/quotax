@@ -1,0 +1,13 @@
+@import url("stylesheet.css");
+
+.quota-secondary, .quota-footnote, .quota-badge, .quota-issue-icon, .quota-text-button { color: rgba(255, 255, 255, 0.62); }
+.quota-card { background-color: rgba(255, 255, 255, 0.06); }
+.quota-actions { background-color: rgba(255, 255, 255, 0.06); }
+.quota-badge { background-color: rgba(255, 255, 255, 0.1); }
+.quota-icon-button { color: rgba(255, 255, 255, 0.7); }
+.quota-icon-button:hover, .quota-text-button:hover { background-color: rgba(255, 255, 255, 0.1); color: #ffffff; }
+.quota-icon-button:checked { background-color: rgba(255, 255, 255, 0.14); color: #ffffff; }
+.quota-icon-button:insensitive { color: rgba(255, 255, 255, 0.3); }
+.quota-window-value.level-warning, .quota-issue-icon.level-warning { color: #ffa348; }
+.quota-window-value.level-critical { color: #ff7b63; }
+.quota-destructive { color: #ff7b63; }
