@@ -1,8 +1,8 @@
 import {_} from './i18n.js';
 
-export const PROVIDERS = ['claude', 'codex', 'grok'];
-export const DISPLAY_NAMES = {claude: 'Claude', codex: 'Codex', grok: 'Grok'};
-export const CLI_NAMES = {claude: 'Claude Code', codex: 'Codex', grok: 'Grok'};
+export const PROVIDERS = ['claude', 'codex', 'grok', 'ollama'];
+export const DISPLAY_NAMES = {claude: 'Claude', codex: 'Codex', grok: 'Grok', ollama: 'Ollama Cloud'};
+export const CLI_NAMES = {claude: 'Claude Code', codex: 'Codex', grok: 'Grok', ollama: 'Ollama'};
 
 export function nowSeconds() {
     return Date.now() / 1000;

@@ -6,7 +6,7 @@ import time
 from .models import Account, AccountIdentity, ProviderSnapshot, UsageWindow
 
 EMAIL = "name@example.com"
-PLANS = {"claude": "Team", "codex": "Plus", "grok": "SuperGrok"}
+PLANS = {"claude": "Team", "codex": "Plus", "grok": "SuperGrok", "ollama": "Pro"}
 
 
 def enabled() -> bool:
@@ -41,5 +41,6 @@ def snapshot(account: Account) -> ProviderSnapshot:
             UsageWindow("weekly", 37, later(days=5, hours=13)),
         ],
         "grok": [UsageWindow("weekly", 96, later(days=3, hours=9))],
+        "ollama": [UsageWindow("monthly", 43)],
     }[account.provider]
     return ProviderSnapshot(account.provider, PLANS[account.provider], windows, account=account.email or EMAIL, fetched_at=now - 125)

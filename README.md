@@ -1,12 +1,12 @@
 # Quotax
 
-A small GNOME Shell extension that shows how much of your **Claude**, **Codex** and **Grok** subscription limits you have left, at a glance, in the top bar.
+A small GNOME Shell extension that shows how much of your **Claude**, **Codex**, **Grok** and **Ollama Cloud** subscription limits you have left, at a glance, in the top bar.
 
 This is the Linux port of [Quota for macOS](https://github.com/turinglabsorg/quota): same data sources, same account model, same design, rebuilt as a GNOME Shell extension with a small Python backend.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/readme-dark.png">
-  <img alt="Quotax in the GNOME top bar and its menu showing usage for Claude, Codex and Grok" src="docs/screenshots/readme-light.png" width="408">
+  <img alt="Quotax in the GNOME top bar and its menu showing usage for Claude, Codex, Grok and Ollama Cloud" src="docs/screenshots/readme-light.png" width="408">
 </picture>
 
 ## Features
@@ -26,12 +26,13 @@ This is the Linux port of [Quota for macOS](https://github.com/turinglabsorg/quo
 | Claude (Claude Code login) | Pro, Max, Team | 5-hour session, weekly, weekly per model |
 | Codex (ChatGPT login) | Free, Plus, Pro, Business | as reported by Codex (5-hour, weekly or 30-day) |
 | Grok (Grok CLI login) | SuperGrok and Grok plans with weekly or monthly credits | weekly credits or monthly budget |
+| Ollama Cloud (ollama.com account) | Free, Pro, Max, Team | monthly usage pool (legacy Pro/Max: 5-hour session and weekly), no reset time |
 
 ## Requirements
 
 - GNOME Shell 48, 49 or 50 (tested on Ubuntu 26.04, GNOME 50, Wayland)
 - Python 3.10 or later (standard library only)
-- The CLI of each service you want to link: [`claude`](https://github.com/anthropics/claude-code), [`codex`](https://github.com/openai/codex), `grok`. If the `claude` CLI is missing, Quotax falls back to the Claude Code bundled with the Claude desktop app.
+- The CLI of each service you want to link: [`claude`](https://github.com/anthropics/claude-code), [`codex`](https://github.com/openai/codex), `grok`. If the `claude` CLI is missing, Quotax falls back to the Claude Code bundled with the Claude desktop app. Ollama Cloud needs no CLI: sign in from the menu, or link the login of [Ollama](https://ollama.com/download) (`ollama signin`).
 
 ## Install
 
@@ -74,18 +75,20 @@ Every command accepts `--json`, which prints one JSON event per line. The extens
 | Claude | `GET api.anthropic.com/api/oauth/usage` with the Claude Code OAuth token |
 | Codex | JSON-RPC `account/rateLimits/read` on `codex app-server`, so Codex refreshes its own token |
 | Grok | `GET cli-chat-proxy.grok.com/v1/billing` with the Grok CLI token |
+| Ollama Cloud | `GET ollama.com/api/usage` and `POST ollama.com/api/me`, signed with an Ed25519 device key like the Ollama CLI does |
 
 Quotax refreshes every 5 minutes, after resume from suspend, when a window resets and when you open the menu (if the data is more than a minute old). It only talks to the services above.
 
 Tokens of the shared CLI logins are renewed by the official CLIs, never by Quotax. If the Claude Code token has expired because you have not used `claude` in a while, Quotax starts it in the background for a few seconds so it can renew its own session, then retries.
 
-These endpoints are the ones the official CLIs use. They are not public APIs and may change without notice.
+These endpoints are the ones the official CLIs and ollama.com/settings use. They are not public APIs and may change without notice. Ollama reports only how much of each window is used, never when it resets, so Ollama Cloud windows show no countdown.
 
 ### Where data lives
 
 - Linked accounts (no secrets): `~/.config/quotax/accounts.json`.
 - Accounts signed in through Quotax: `~/.local/share/quotax/accounts/<service>/<id>` (mode 700), including Claude's `.credentials.json`.
-- Shared CLI logins stay where each CLI keeps them (`~/.claude`, `~/.codex`, `~/.grok`).
+- Shared CLI logins stay where each CLI keeps them (`~/.claude`, `~/.codex`, `~/.grok`, `~/.ollama`).
+- Ollama Cloud accounts signed in through Quotax are a device key in their isolated folder, linked to your account on ollama.com; unlinking the account also removes the key from ollama.com.
 - Display setting: GSettings key `org.gnome.shell.extensions.quotax display-mode`.
 
 ## Differences from the macOS app
@@ -118,7 +121,7 @@ The endpoints, headers and account-isolation approach follow [Orca](https://gith
 
 ## Disclaimer
 
-Quotax is an independent project and is not affiliated with, endorsed by or sponsored by Anthropic, OpenAI or xAI. Claude, Codex and Grok are trademarks of their respective owners.
+Quotax is an independent project and is not affiliated with, endorsed by or sponsored by Anthropic, OpenAI, xAI or Ollama. Claude, Codex, Grok and Ollama are trademarks of their respective owners.
 
 ## License
 

@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import re
@@ -7,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from quotax import accounts, claude, codex, grok, jsonutil, paths
+from quotax import accounts, claude, codex, ed25519, grok, jsonutil, ollama, paths
 from quotax.formatting import countdown
 from quotax.models import Account, AccountIdentity, ProviderIssue, ProviderSnapshot, UsageWindow, usage_level
 
@@ -333,6 +334,107 @@ class AccountTests(unittest.TestCase):
             accounts.unlink(account)
             self.assertFalse(account.home.exists())
             self.assertTrue(paths.accounts_root().exists())
+
+
+class Ed25519Tests(unittest.TestCase):
+    # RFC 8032, section 7.1, tests 1–3.
+    VECTORS = [
+        (
+            "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+            "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+            "",
+            "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b",
+        ),
+        (
+            "4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb",
+            "3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c",
+            "72",
+            "92a009a9f0d4cab8720e820b5f642540a2b27b5416503f8fb3762223ebdb69da085ac1e43e15996e458f3613d0f11d8c387b2eaeb4302aeeb00d291612bb0c00",
+        ),
+        (
+            "c5aa8df43f9f837bedb7442f31dcb7b166d38535076f094b85ce3a2e0b4458f7",
+            "fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025",
+            "af82",
+            "6291d657deec24024827e69c3abe01a30ce548a284743a445e3680d7db5ac3ac18ff9b538d16f290ae67f760984dc6594a7c15e9716ed28dc027beceea1ec40a",
+        ),
+    ]
+
+    def test_matches_rfc_8032_vectors(self):
+        for seed, public, message, signature in self.VECTORS:
+            self.assertEqual(ed25519.public_key(bytes.fromhex(seed)).hex(), public)
+            self.assertEqual(ed25519.sign(bytes.fromhex(seed), bytes.fromhex(message)).hex(), signature)
+
+    def test_openssh_private_keys_round_trip(self):
+        seed = bytes.fromhex(self.VECTORS[0][0])
+        text = ed25519.write_private_key(seed)
+        self.assertTrue(text.startswith("-----BEGIN OPENSSH PRIVATE KEY-----\n"))
+        self.assertEqual(ed25519.read_private_key(text), (seed, bytes.fromhex(self.VECTORS[0][1])))
+        self.assertIsNone(ed25519.read_private_key("-----BEGIN OPENSSH PRIVATE KEY-----\nbm90IGEga2V5\n-----END OPENSSH PRIVATE KEY-----"))
+        self.assertIsNone(ed25519.read_private_key("garbage"))
+
+
+class OllamaTests(unittest.TestCase):
+    KEY = ollama.OllamaKey(bytes.fromhex(Ed25519Tests.VECTORS[0][0]), bytes.fromhex(Ed25519Tests.VECTORS[0][1]))
+
+    def test_signs_requests_like_the_ollama_cli(self):
+        blob, signature = self.KEY.authorization("GET", "/api/usage", "1770000000").split(":")
+        self.assertEqual(base64.b64decode(blob), ed25519.public_blob(self.KEY.public))
+        self.assertEqual(base64.b64decode(signature), ed25519.sign(self.KEY.seed, b"GET,/api/usage?ts=1770000000"))
+
+    def test_builds_the_connect_link_ollama_opens(self):
+        url = ollama.connect_url(self.KEY, "my laptop")
+        self.assertTrue(url.startswith("https://ollama.com/connect?name=my%20laptop&key="))
+        encoded = url.split("&key=")[1]
+        self.assertNotIn("=", encoded)
+        decoded = base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4)).decode()
+        self.assertEqual(decoded, self.KEY.authorized_key)
+        self.assertTrue(decoded.startswith("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5"))
+
+    def test_maps_the_monthly_pool(self):
+        windows = ollama.parse_usage("""
+        {
+          "activity": { "cost": "0.00000", "period": { "type": "last_4_weeks" }, "models": [] },
+          "limits": { "monthly": { "usage": 0.043, "models": [ { "name": "gpt-oss:120b", "request_count": 32 } ] } }
+        }
+        """)
+        self.assertEqual([(w.kind, round(w.used_percent, 1), w.resets_at) for w in windows], [("monthly", 4.3, None)])
+        self.assertEqual(windows[0].label, "Monthly")
+
+    def test_maps_legacy_windows_and_ignores_invalid_fractions(self):
+        windows = ollama.parse_usage('{ "Limits": { "Session": { "Usage": 0.067 }, "weekly": { "usage": 1.7 } } }')
+        self.assertEqual([w.kind for w in windows], ["session"])
+        self.assertEqual(ollama.parse_usage('{ "limits": {} }'), [])
+        with self.assertRaises(ProviderIssue):
+            ollama.parse_usage('{ "error": "invalid credentials" }')
+
+    def test_reads_the_account_and_treats_an_empty_user_as_not_linked(self):
+        linked = '{ "ID": "1", "Email": "me@example.com", "Name": "me", "Plan": "pro" }'
+        self.assertEqual(ollama.parse_identity(linked), AccountIdentity("me@example.com", "Pro"))
+        empty = '{ "ID": "00000000-0000-0000-0000-000000000000", "Email": "", "Name": "", "Plan": "" }'
+        self.assertIsNone(ollama.parse_identity(empty))
+
+    def test_signs_in_by_linking_a_new_key_in_the_browser(self):
+        with tempfile.TemporaryDirectory() as directory, mock.patch.dict(os.environ, {"XDG_DATA_HOME": directory}), \
+                mock.patch.object(accounts.process, "open_url") as open_url, \
+                mock.patch.object(accounts.time, "sleep"), \
+                mock.patch.object(ollama, "whoami", side_effect=[None, None, AccountIdentity("me@example.com", "Pro")]):
+            urls = []
+            identity = accounts.sign_in("ollama", "0B6B3E0C-6B83-4C8B-9E0A-1E7A8E6C0005", urls.append)
+            home = paths.account_home("ollama", "0B6B3E0C-6B83-4C8B-9E0A-1E7A8E6C0005")
+            key = ollama.read_key(home / ollama.KEY_FILE)
+            self.assertEqual(identity, AccountIdentity("me@example.com", "Pro"))
+            self.assertEqual(urls, [ollama.connect_url(key, accounts.socket.gethostname())])
+            open_url.assert_called_once_with(urls[0])
+            self.assertEqual((home / ollama.KEY_FILE).stat().st_mode & 0o777, 0o600)
+
+    def test_unlink_disconnects_the_key_and_removes_the_home(self):
+        with tempfile.TemporaryDirectory() as directory, mock.patch.dict(os.environ, {"XDG_DATA_HOME": directory}), \
+                mock.patch.object(ollama, "disconnect") as disconnect:
+            account = Account("ollama", "managed")
+            key = ollama.create_key(account.home / ollama.KEY_FILE)
+            accounts.unlink(account)
+            disconnect.assert_called_once_with(key)
+            self.assertFalse(account.home.exists())
 
 
 class CatalogTests(unittest.TestCase):

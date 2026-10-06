@@ -9,9 +9,9 @@ from . import paths
 from .formatting import duration, rounded
 from .i18n import _
 
-PROVIDERS = ("claude", "codex", "grok")
-DISPLAY_NAMES = {"claude": "Claude", "codex": "Codex", "grok": "Grok"}
-CLI_NAMES = {"claude": "Claude Code", "codex": "Codex", "grok": "Grok"}
+PROVIDERS = ("claude", "codex", "grok", "ollama")
+DISPLAY_NAMES = {"claude": "Claude", "codex": "Codex", "grok": "Grok", "ollama": "Ollama Cloud"}
+CLI_NAMES = {"claude": "Claude Code", "codex": "Codex", "grok": "Grok", "ollama": "Ollama"}
 
 
 @dataclass

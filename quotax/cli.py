@@ -20,7 +20,7 @@ def main(argv: list[str] | None = None) -> int:
     for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
         signal.signal(sig, _stop)
 
-    parser = argparse.ArgumentParser(prog="quotax", description="Remaining Claude, Codex and Grok subscription usage.")
+    parser = argparse.ArgumentParser(prog="quotax", description="Remaining Claude, Codex, Grok and Ollama Cloud subscription usage.")
     parser.add_argument("--version", action="version", version=f"quotax {__version__}")
     commands = parser.add_subparsers(dest="command")
     commands.add_parser("print", help="print usage for the linked accounts (default)")

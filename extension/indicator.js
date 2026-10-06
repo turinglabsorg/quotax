@@ -248,7 +248,7 @@ class QuotaIndicator extends PanelMenu.Button {
     _emptyState() {
         const card = new St.BoxLayout({style_class: 'quota-card', orientation: VERTICAL});
         card.add_child(new St.Label({text: _('No linked accounts'), style_class: 'quota-card-title'}));
-        card.add_child(wrapped(_('Choose which Claude, Codex and Grok accounts to monitor.'), 'quota-body'));
+        card.add_child(wrapped(_('Choose which Claude, Codex, Grok and Ollama Cloud accounts to monitor.'), 'quota-body'));
         const add = new St.Button({
             label: _('Add account'),
             style_class: 'button default quota-small-button',

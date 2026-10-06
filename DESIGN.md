@@ -20,7 +20,7 @@ Shared rules live in `extension/stylesheet.css`; `stylesheet-dark.css` and `styl
 | `level.critical` | `#ff7b63` text, `#e01b24` bar | `#c01c28` text, `#e01b24` bar | 5% or less remaining |
 | `panel.warning`, `panel.critical` | `#ffa348`, `#f66151` | same (the top bar is dark) | Top bar values |
 | `accent.claude` | `#d97757` | same | Claude glyph in the menu |
-| `accent.codex`, `accent.grok` | text color | text color | Monochrome brands |
+| `accent.codex`, `accent.grok`, `accent.ollama` | text color | text color | Monochrome brands |
 | `text.secondary` | white at 62% | black at 60% | Subtitles, resets, suffixes, issues |
 | `surface.card` | white at 6% | black at 4.5% | Account and provider cards |
 | `surface.track` | text color at 13% | same | Empty part of usage bars |
@@ -57,6 +57,7 @@ Custom stroked shapes drawn with Cairo in `extension/glyphs.js`, line width 15% 
 - **Claude**: ten-ray burst with alternating ray length.
 - **Codex**: terminal prompt `>_`.
 - **Grok**: open ring with a diagonal slash.
+- **Ollama Cloud**: llama head, two ears leaning outwards over a rounded head with two eye dots.
 - **Gauge**: arc with a needle at one third, in the top bar when nothing is available yet.
 
 ## Components

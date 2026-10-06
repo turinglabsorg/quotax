@@ -8,12 +8,14 @@ import json
 import os
 import re
 import shutil
+import socket
+import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
 
-from . import claude, codex, grok, paths, process, sample
+from . import claude, codex, grok, ollama, paths, process, sample
 from .i18n import _
-from .models import DISPLAY_NAMES, PROVIDERS, Account, AccountIdentity, ProviderSnapshot
+from .models import DISPLAY_NAMES, PROVIDERS, Account, AccountIdentity, ProviderIssue, ProviderSnapshot
 
 LOGIN_TIMEOUT = 600
 
@@ -91,8 +93,10 @@ def fetch(account: Account) -> ProviderSnapshot:
             return claude.ClaudeFetcher(account).fetch()
         case "codex":
             return codex.CodexFetcher(account).fetch()
-        case _:
+        case "grok":
             return grok.GrokFetcher(account).fetch()
+        case _:
+            return ollama.OllamaFetcher(account).fetch()
 
 
 class LinkError(Exception):
@@ -118,9 +122,12 @@ def detect_cli_login(provider: str) -> AccountIdentity | None:
                     return None
                 response = codex.rpc_call(executable, None, [codex.ACCOUNT_METHOD])
                 return codex.parse_identity(response.results.get(codex.ACCOUNT_METHOD))
-            case _:
+            case "grok":
                 credentials = grok.read_credentials(grok.home_for(Account("grok", "cli")))
                 return AccountIdentity(credentials.email, None) if credentials else None
+            case _:
+                key = ollama.read_key(ollama.key_path(Account("ollama", "cli")))
+                return ollama.whoami(key) if key else None
     except Exception:  # noqa: BLE001 - a CLI that misbehaves simply has no usable login
         return None
 
@@ -137,9 +144,11 @@ def link_shared_login(provider: str, identity: AccountIdentity | None) -> Accoun
 
 
 def sign_in(provider: str, account_id: str, on_login_url: Callable[[str], None]) -> AccountIdentity:
-    """Runs the official CLI sign-in in an isolated home; the user signs in on the provider's page."""
-    executable = process.locate(provider)
-    if executable is None:
+    """Runs the official sign-in in an isolated home; the user signs in on the provider's page."""
+    # Ollama Cloud links a key in the browser and needs no CLI; the others sign in through theirs.
+    needs_cli = provider != "ollama"
+    executable = process.locate(provider) if needs_cli else None
+    if needs_cli and executable is None:
         raise LinkError(_("`{name}` CLI not found: install it and try again.", name=provider))
     home = paths.account_home(provider, account_id)
     paths.accounts_root().mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -155,8 +164,10 @@ def sign_in(provider: str, account_id: str, on_login_url: Callable[[str], None])
                 return _sign_in_claude(executable, home, on_output)
             case "codex":
                 return _sign_in_codex(executable, home, on_output)
-            case _:
+            case "grok":
                 return _sign_in_grok(executable, home, on_output)
+            case _:
+                return _sign_in_ollama(home, on_login_url)
     except BaseException as error:
         shutil.rmtree(home, ignore_errors=True)
         if isinstance(error, (LinkError, KeyboardInterrupt, SystemExit)):
@@ -174,6 +185,8 @@ def unlink(account: Account) -> None:
         variable = "CODEX_HOME" if account.provider == "codex" else "GROK_HOME"
         with contextlib.suppress(OSError, process.TimedOut):
             process.run(executable, ["logout"], env={variable: str(home)}, timeout=30)
+    if account.provider == "ollama" and (key := ollama.read_key(home / ollama.KEY_FILE)):
+        ollama.disconnect(key)
     shutil.rmtree(home, ignore_errors=True)
 
 
@@ -197,6 +210,21 @@ def _sign_in_grok(executable: Path, home: Path, on_output) -> AccountIdentity:
     if login.status != 0 or credentials is None:
         raise LinkError(_("{name} sign-in was not completed.", name=DISPLAY_NAMES["grok"]))
     return AccountIdentity(credentials.email, None)
+
+
+def _sign_in_ollama(home: Path, on_login_url) -> AccountIdentity:
+    # Like `ollama signin`: a new device key, linked on ollama.com to the account the user signs in to.
+    key = ollama.create_key(home / ollama.KEY_FILE)
+    url = ollama.connect_url(key, socket.gethostname())
+    on_login_url(url)
+    process.open_url(url)
+    deadline = time.monotonic() + LOGIN_TIMEOUT
+    while time.monotonic() < deadline:
+        time.sleep(3)
+        with contextlib.suppress(ProviderIssue):
+            if identity := ollama.whoami(key):
+                return identity
+    raise process.TimedOut()
 
 
 def _sign_in_claude(executable: Path, home: Path, on_output) -> AccountIdentity:

@@ -1,6 +1,6 @@
 # Quotax: agent instructions
 
-GNOME Shell extension (GJS, ESM) plus a standard-library Python backend that shows remaining subscription usage for the Claude, Codex and Grok accounts the user links. Linux port of the macOS app (github.com/turinglabsorg/quota): keep behavior, data sources and copy in sync with it.
+GNOME Shell extension (GJS, ESM) plus a standard-library Python backend that shows remaining subscription usage for the Claude, Codex, Grok and Ollama Cloud accounts the user links. Linux port of the macOS app (github.com/turinglabsorg/quota): keep behavior, data sources and copy in sync with it.
 
 ## Layout
 
@@ -30,12 +30,13 @@ GNOME Shell extension (GJS, ESM) plus a standard-library Python backend that sho
 
 The user decides which accounts are monitored; nothing is linked automatically. Accounts are stored (without secrets) in `~/.config/quotax/accounts.json`, written atomically under `accounts.lock`; the extension watches the file, so changes made from a terminal show up immediately.
 
-- **Shared login** (`source: "cli"`): reuses the CLI's own session (`~/.claude/.credentials.json`, `~/.codex` via the Codex CLI, `~/.grok/auth.json`). Quotax never refreshes or writes these tokens itself: refresh tokens rotate, so doing it would sign the CLI out. When the shared Claude token has expired, Quotax briefly starts `claude` in a pseudo-terminal so the CLI renews its own token, then retries (one attempt at a time across processes via a lock in `~/.local/state/quotax`, 10-minute cooldown after a failure; see `SharedClaudeLogin`).
+- **Shared login** (`source: "cli"`): reuses the CLI's own session (`~/.claude/.credentials.json`, `~/.codex` via the Codex CLI, `~/.grok/auth.json`, the `~/.ollama/id_ed25519` device key that `ollama signin` linked). Quotax never refreshes or writes these tokens itself: refresh tokens rotate, so doing it would sign the CLI out. When the shared Claude token has expired, Quotax briefly starts `claude` in a pseudo-terminal so the CLI renews its own token, then retries (one attempt at a time across processes via a lock in `~/.local/state/quotax`, 10-minute cooldown after a failure; see `SharedClaudeLogin`).
 - **Linked by Quotax** (`source: "managed"`): isolated home at `~/.local/share/quotax/accounts/<provider>/<uuid>` (mode 700), signed in through the official CLI in the browser:
   - Codex: `CODEX_HOME=<home> codex login`; usage via `codex app-server` with the same `CODEX_HOME`, so Codex refreshes its own token.
   - Grok: `GROK_HOME=<home> grok login --oauth` in a pseudo-terminal (Grok expects a TTY); expired tokens are refreshed by running `grok models` with the same home.
+  - Ollama Cloud (no CLI): Quotax creates an Ed25519 key in `<home>/.ollama/id_ed25519` (OpenSSH format, mode 600), opens `https://ollama.com/connect?name=<hostname>&key=<base64url(authorized key)>` like `ollama signin` does, and polls `POST /api/me` until ollama.com reports the linked user (an unlinked key gets an empty user, not a 401).
   - Claude: `CLAUDE_CONFIG_DIR=<home> claude auth login --claudeai`; credentials land in `<home>/.credentials.json`. `~/.claude/.credentials.json` is snapshotted before login and restored afterwards so Claude Code keeps its account. Quotax refreshes managed Claude tokens via `https://platform.claude.com/v1/oauth/token`.
-- Unlinking a managed account runs the CLI logout (Codex, Grok) and removes its home.
+- Unlinking a managed account runs the CLI logout (Codex, Grok) or `DELETE /api/user/keys/<key>` (Ollama Cloud) and removes its home.
 - Child CLIs run without inherited `CLAUDE*`/`ANTHROPIC_*` variables, so a parent agent's credentials never stand in for the stored login.
 
 ## Data sources
@@ -45,6 +46,7 @@ Mirrors the macOS app and Orca (github.com/stablyai/orca, `src/main/rate-limits`
 - Claude: `GET https://api.anthropic.com/api/oauth/usage` with `anthropic-beta: oauth-2025-04-20`.
 - Codex: JSON-RPC `account/read` + `account/rateLimits/read` on `codex app-server`; fallback `GET https://chatgpt.com/backend-api/wham/usage` for the shared login when the CLI is missing.
 - Grok: `GET https://cli-chat-proxy.grok.com/v1/billing?format=credits` with `X-XAI-Token-Auth: xai-grok-cli`, falling back to `/v1/billing` for monthly budgets. The API omits zero-valued fields: a missing `creditUsagePercent` means 0% only when the weekly `currentPeriod` matches `billingPeriodStart/End` and no field shows explicit zeros or spend (same rule as Orca).
+- Ollama Cloud: `GET https://ollama.com/api/usage` (`limits.monthly.usage`, or legacy `limits.session`/`limits.weekly`, as fractions 0–1; no reset times) and `POST https://ollama.com/api/me` for email and plan. Requests are signed as in ollama/ollama `api/client.go`: `Authorization: <base64 public key blob>:<base64 Ed25519 signature of "<METHOD>,<path>?ts=<unix>">` with the same `ts` in the query. ollama.com answers with Go field names (`Email`, `Plan`), so parse keys case-insensitively. Ed25519 lives in `quotax/ed25519.py` (stdlib only, RFC 8032 vectors in the tests).
 
 ## Rules
 

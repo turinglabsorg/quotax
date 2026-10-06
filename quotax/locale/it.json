@@ -54,7 +54,6 @@
   "Add account": "Aggiungi account",
   "Refresh now": "Aggiorna ora",
   "No linked accounts": "Nessun account collegato",
-  "Choose which Claude, Codex and Grok accounts to monitor.": "Scegli tu quali account di Claude, Codex e Grok monitorare.",
   "No accounts": "Nessun account",
   "Updating…": "Aggiornamento…",
   "Waiting for data…": "In attesa dei dati…",
@@ -78,5 +77,8 @@
   "not signed in": "nessun login",
   "Linked {name}.": "Collegato {name}.",
   "Finish signing in in your browser: {url}": "Completa l'accesso nel browser: {url}",
-  "No linked account with this ID.": "Nessun account collegato con questo ID."
+  "No linked account with this ID.": "Nessun account collegato con questo ID.",
+  "Not signed in to Ollama Cloud. Run `ollama signin`.": "Nessun login a Ollama Cloud. Esegui `ollama signin`.",
+  "Ollama Cloud session expired: relink the account.": "Sessione Ollama Cloud scaduta: ricollega l'account.",
+  "Choose which Claude, Codex, Grok and Ollama Cloud accounts to monitor.": "Scegli tu quali account di Claude, Codex, Grok e Ollama Cloud monitorare."
 }

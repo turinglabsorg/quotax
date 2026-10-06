@@ -14,7 +14,11 @@ _opener = urllib.request.build_opener()
 
 
 def get(url: str, headers: dict[str, str]) -> bytes:
-    return _send(urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **headers}))
+    return request("GET", url, headers)
+
+
+def request(method: str, url: str, headers: dict[str, str]) -> bytes:
+    return _send(urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **headers}, method=method))
 
 
 def post_form(url: str, fields: dict[str, str]) -> bytes:

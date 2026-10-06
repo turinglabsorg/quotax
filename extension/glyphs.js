@@ -34,6 +34,25 @@ const SHAPES = {
         cr.moveTo(center - size * 0.44, center + size * 0.44);
         cr.lineTo(center + size * 0.44, center - size * 0.44);
     },
+    // Llama head: two ears leaning outwards over a rounded head with two eyes.
+    ollama(cr, size) {
+        cr.moveTo(size * 0.37, size * 0.4);
+        cr.lineTo(size * 0.29, size * 0.08);
+        cr.moveTo(size * 0.63, size * 0.4);
+        cr.lineTo(size * 0.71, size * 0.08);
+        const [left, right, top, bottom, radius] = [size * 0.16, size * 0.84, size * 0.4, size * 0.94, size * 0.2];
+        cr.newSubPath();
+        cr.arc(right - radius, top + radius, radius, -TAU / 4, 0);
+        cr.arc(right - radius, bottom - radius, radius, 0, TAU / 4);
+        cr.arc(left + radius, bottom - radius, radius, TAU / 4, TAU / 2);
+        cr.arc(left + radius, top + radius, radius, TAU / 2, TAU * 3 / 4);
+        cr.closePath();
+        // Round caps turn these zero-length strokes into dots.
+        for (const x of [0.39, 0.61]) {
+            cr.moveTo(size * x, size * 0.64);
+            cr.lineTo(size * x, size * 0.64);
+        }
+    },
     // Gauge with the needle at one third, shown when nothing is linked yet.
     gauge(cr, size) {
         const center = size / 2;

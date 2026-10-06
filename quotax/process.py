@@ -171,6 +171,19 @@ def spawn_pipes(executable: str | Path, arguments: list[str], *, env: dict[str, 
     return process
 
 
+def open_url(url: str) -> None:
+    """Opens a page in the default browser; the browser outlives Quotax, so it is not tracked."""
+    with contextlib.suppress(OSError):
+        subprocess.Popen(
+            ["xdg-open", url],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            env=environment({}, "/usr/bin/xdg-open"),
+            start_new_session=True,
+        )
+
+
 def terminate(process: subprocess.Popen) -> None:
     _terminate(process)
 

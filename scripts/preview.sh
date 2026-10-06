@@ -48,7 +48,8 @@ cat > "$WORK/config/quotax/accounts.json" <<'EOF'
   {"id": "0B6B3E0C-6B83-4C8B-9E0A-1E7A8E6C0001", "provider": "claude", "source": "cli", "email": "name@example.com", "plan": "Team"},
   {"id": "0B6B3E0C-6B83-4C8B-9E0A-1E7A8E6C0004", "provider": "claude", "source": "managed", "email": "work@example.com", "plan": "Max 5x"},
   {"id": "0B6B3E0C-6B83-4C8B-9E0A-1E7A8E6C0002", "provider": "codex", "source": "cli", "email": "name@example.com", "plan": "Plus"},
-  {"id": "0B6B3E0C-6B83-4C8B-9E0A-1E7A8E6C0003", "provider": "grok", "source": "managed", "email": "name@example.com", "plan": "SuperGrok"}
+  {"id": "0B6B3E0C-6B83-4C8B-9E0A-1E7A8E6C0003", "provider": "grok", "source": "managed", "email": "name@example.com", "plan": "SuperGrok"},
+  {"id": "0B6B3E0C-6B83-4C8B-9E0A-1E7A8E6C0005", "provider": "ollama", "source": "managed", "email": "name@example.com", "plan": "Pro"}
 ]}
 EOF
 fi
