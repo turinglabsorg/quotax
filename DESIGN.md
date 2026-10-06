@@ -5,7 +5,7 @@ Quotax is a GNOME Shell top bar utility. It should feel like part of the shell: 
 ## Principles
 
 - **The user chooses.** Nothing is monitored until the user links an account.
-- **Glanceable first.** The top bar shows one number per linked account: the tightest account-wide window. Model-scoped limits (e.g. weekly Fable) appear only in the menu because they do not block the whole account.
+- **Glanceable first.** The top bar shows one number per linked account: the tightest account-wide window. When an account reports both a 5-hour session and a weekly (or monthly) window, it shows both, stacked: session above, weekly below. Model-scoped limits (e.g. weekly Fable) appear only in the menu because they do not block the whole account.
 - **Color means state.** Neutral when healthy, orange when running low, red when nearly exhausted. Brand color is limited to the Claude glyph in the menu.
 - **Native materials.** The menu is the shell's own `PopupMenu` (`PanelMenu.Button`), with the theme's font, `.button` styles and accent color, so light/dark and the user's accent work for free.
 
@@ -36,6 +36,7 @@ The shell theme's font only. Digits use `font-feature-settings: "tnum"` so value
 | Role | Size | Weight |
 | --- | --- | --- |
 | Top bar value | theme | 500 |
+| Top bar stacked values | 0.7em | 600 |
 | Menu title, provider name | theme | bold |
 | Window label | theme | regular |
 | Window value | theme | bold |
@@ -47,7 +48,7 @@ The shell theme's font only. Digits use `font-feature-settings: "tnum"` so value
 - Menu content 360 px wide; header padding 6/6/12/12; 8 px between cards.
 - Cards: 12 px padding, 14 px radius, 12 px between rows.
 - Usage bar: 6 px tall capsule; non-zero values render at least as wide as the bar is tall.
-- Top bar: 10 px between accounts, 4 px between glyph and value, glyph 14 px.
+- Top bar: 10 px between accounts, 4 px between glyph and value, glyph 14 px. Stacked values are drawn 2 px closer to each other than their line boxes (`STACK_TIGHTENING`), leaving room above and below.
 - The card list scrolls inside the menu when it is taller than the work area; header and "Add account" stay visible.
 
 ## Glyphs
@@ -62,7 +63,7 @@ Custom stroked shapes drawn with Cairo in `extension/glyphs.js`, line width 15% 
 
 ## Components
 
-- **Top bar label** (`QuotaIndicator._renderPanel`): glyph + percentage per linked account; the gauge glyph when nothing is available.
+- **Top bar label** (`QuotaIndicator._renderPanel`, `panelWindows`): glyph + percentage per linked account, or glyph + two stacked percentages (session, weekly) each colored by its own level, with the glyph taking the tighter one's color; the gauge glyph when nothing is available.
 - **Account card**: header (glyph, provider name, account email in secondary text, plan badge, `view-more-symbolic` button revealing the source and a destructive "Unlink account" button), one window row per window, optional issue line.
 - **Settings card**: shown by the gear button; "Show" with a segmented "Percentage left / Percentage used" choice.
 - **Empty state**: card with title, one-line explanation and a small `.button.default` "Add account".

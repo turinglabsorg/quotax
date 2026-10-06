@@ -13,10 +13,11 @@ import {Glyph, UsageBar} from './glyphs.js';
 import {_} from './i18n.js';
 import {
     CLI_NAMES, DISPLAY_NAMES, PROVIDERS, countdown, displaySuffix, displayValue, hasReset, nowSeconds,
-    relative, remainingAt, tightestWindow, usageLevel,
+    panelWindows, relative, remainingAt, usageLevel,
 } from './model.js';
 
 const CLOCK_INTERVAL = 30;
+const STACK_TIGHTENING = 2;
 const VERTICAL = Clutter.Orientation.VERTICAL;
 // Logical pixels around the scrolled list: header, footer, menu padding and arrow.
 const RESERVED_HEIGHT = {usage: 170, addAccount: 250};
@@ -103,26 +104,40 @@ class QuotaIndicator extends PanelMenu.Button {
             this._renderMenu();
     }
 
-    // Top bar: one value per linked account, the tightest account-wide window.
+    // Top bar: per linked account, the 5-hour session above the longer window when both exist,
+    // otherwise the tightest account-wide window. The glyph takes the color of the tighter value.
     _renderPanel() {
         this._panelBox.destroy_all_children();
         const now = nowSeconds();
         let shown = 0;
         for (const account of this._accounts.accounts) {
             const entry = this._store.entries.get(account.id);
-            const window = entry?.snapshot ? tightestWindow(entry.snapshot, now) : null;
-            if (!window)
+            const windows = entry?.snapshot ? panelWindows(entry.snapshot, now) : [];
+            if (!windows.length)
                 continue;
-            const remaining = remainingAt(window, now);
-            const item = new St.BoxLayout({style_class: `quota-panel-item level-${usageLevel(remaining)}`});
+            const remaining = windows.map(window => remainingAt(window, now));
+            const item = new St.BoxLayout({style_class: 'quota-panel-item'});
             if (entry.issue)
                 item.opacity = 140;
-            item.add_child(new Glyph(account.provider, 'quota-panel-glyph'));
-            item.add_child(new St.Label({
-                text: `${displayValue(this._displayMode, remaining)}%`,
-                style_class: 'quota-panel-label',
+            item.add_child(new Glyph(account.provider, `quota-panel-glyph level-${usageLevel(Math.min(...remaining))}`));
+            const values = new St.BoxLayout({
+                style_class: windows.length > 1 ? 'quota-panel-stack' : '',
+                orientation: Clutter.Orientation.VERTICAL,
                 y_align: Clutter.ActorAlign.CENTER,
-            }));
+            });
+            const {scaleFactor} = St.ThemeContext.get_for_stage(global.stage);
+            remaining.forEach((value, index) => {
+                const label = new St.Label({
+                    text: `${displayValue(this._displayMode, value)}%`,
+                    style_class: `quota-panel-label level-${usageLevel(value)}${windows.length > 1 ? ' quota-panel-small' : ''}`,
+                    x_align: Clutter.ActorAlign.START,
+                });
+                // Two stacked values are drawn closer than their line boxes, leaving room above and below.
+                if (windows.length > 1)
+                    label.translation_y = (index === 0 ? 1 : -1) * STACK_TIGHTENING * scaleFactor;
+                values.add_child(label);
+            });
+            item.add_child(values);
             this._panelBox.add_child(item);
             shown++;
         }

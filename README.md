@@ -11,7 +11,7 @@ This is the Linux port of [Quota for macOS](https://github.com/turinglabsorg/quo
 
 ## Features
 
-- **Top bar**: one percentage per linked account, showing the tightest account-wide window. Orange under 20%, red at 5% or less.
+- **Top bar**: one percentage per linked account, showing the tightest account-wide window. Accounts with both a 5-hour session and a weekly (or monthly) window, like Claude, show both in a small stacked column: session above, weekly below. Orange under 20%, red at 5% or less.
 - **Menu**: every window (5-hour session, weekly, model-scoped weekly, monthly) with a bar and a reset countdown. Long lists scroll.
 - **You choose the accounts**: reuse the login of a CLI already on your computer, or sign in to more accounts in the browser. New sign-ins are kept separate from your CLI sessions, so you can monitor several accounts per service.
 - **Settings**: show remaining or used percentage.

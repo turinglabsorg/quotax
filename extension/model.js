@@ -33,6 +33,18 @@ export function tightestWindow(snapshot, now) {
     return tightest;
 }
 
+// Top bar: when an account reports both a 5-hour session and a longer window (weekly or monthly),
+// it shows both, session above; otherwise the tightest account-wide window.
+export function panelWindows(snapshot, now) {
+    const session = snapshot.windows.find(window => window.kind === 'session');
+    const longer = snapshot.windows.find(window => window.kind === 'weekly') ??
+        snapshot.windows.find(window => window.kind === 'monthly');
+    if (session && longer)
+        return [session, longer];
+    const tightest = tightestWindow(snapshot, now);
+    return tightest ? [tightest] : [];
+}
+
 export function usageLevel(remainingPercent) {
     if (remainingPercent <= 5)
         return 'critical';

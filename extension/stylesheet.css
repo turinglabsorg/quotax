@@ -7,8 +7,10 @@
 .quota-panel-label { font-weight: 500; font-feature-settings: "tnum"; }
 .quota-panel-glyph { width: 14px; height: 14px; }
 .quota-panel-empty { width: 16px; height: 16px; }
-.quota-panel-item.level-warning { color: #ffa348; }
-.quota-panel-item.level-critical { color: #f66151; }
+.quota-panel-glyph.level-warning, .quota-panel-label.level-warning { color: #ffa348; }
+.quota-panel-glyph.level-critical, .quota-panel-label.level-critical { color: #f66151; }
+.quota-panel-stack { spacing: 0; }
+.quota-panel-small { font-size: 0.7em; font-weight: 600; }
 
 /* Menu */
 .quota-content { width: 360px; padding: 2px 2px 4px 2px; }
