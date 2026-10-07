@@ -94,20 +94,27 @@ def _fields(value) -> dict:
 
 
 def parse_usage(data: bytes | str) -> list[UsageWindow]:
-    """`limits.<window>.usage` is the used fraction (0–1) of the plan. Ollama sends no reset times.
+    """`GET /api/balance` (ollama/ollama docs/api/balance.mdx).
 
-    Plans since August 2026 report a monthly credit pool; legacy Pro/Max plans report a 5-hour
-    session and a weekly window instead.
+    Current plans report the included monthly allowance in USD (`balance_usd` left of `allowance_usd`,
+    resetting at `period.until`); legacy plans report `session` and `weekly` windows with
+    `remaining_percent` (0–100) and `resets_at`.
     """
     root = _fields(jsonutil.obj(data))
-    if jsonutil.mapping(root.get("limits")) is None:
+    if jsonutil.mapping(root.get("included")) is None:
         raise ProviderIssue("invalidResponse")
-    limits = _fields(root["limits"])
+    included = _fields(root["included"])
     windows = []
-    for kind in ("session", "weekly", "monthly"):
-        usage = jsonutil.number(_fields(limits.get(kind)).get("usage"))
-        if usage is not None and 0 <= usage <= 1:
-            windows.append(UsageWindow(kind, usage * 100))
+    for kind in ("session", "weekly"):
+        window = _fields(included.get(kind))
+        remaining = jsonutil.number(window.get("remaining_percent"))
+        if remaining is not None and 0 <= remaining <= 100:
+            windows.append(UsageWindow(kind, 100 - remaining, jsonutil.timestamp(window.get("resets_at"))))
+    allowance = jsonutil.number(included.get("allowance_usd"))
+    balance = jsonutil.number(included.get("balance_usd"))
+    if allowance is not None and allowance > 0 and balance is not None:
+        period = _fields(included.get("period"))
+        windows.append(UsageWindow("monthly", (allowance - balance) * 100 / allowance, jsonutil.timestamp(period.get("until"))))
     return windows
 
 
@@ -150,7 +157,7 @@ class OllamaFetcher:
         if key is None:
             raise self._signed_out()
         try:
-            windows = parse_usage(signed_request(key, "GET", "/api/usage"))
+            windows = parse_usage(signed_request(key, "GET", "/api/balance"))
         except ProviderIssue as issue:
             if issue.kind == "http" and issue.status in (401, 403):
                 raise self._signed_out() from None

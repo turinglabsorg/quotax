@@ -41,6 +41,6 @@ def snapshot(account: Account) -> ProviderSnapshot:
             UsageWindow("weekly", 37, later(days=5, hours=13)),
         ],
         "grok": [UsageWindow("weekly", 96, later(days=3, hours=9))],
-        "ollama": [UsageWindow("monthly", 43)],
+        "ollama": [UsageWindow("monthly", 43, later(days=13, hours=4))],
     }[account.provider]
     return ProviderSnapshot(account.provider, PLANS[account.provider], windows, account=account.email or EMAIL, fetched_at=now - 125)

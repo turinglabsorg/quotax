@@ -390,22 +390,40 @@ class OllamaTests(unittest.TestCase):
         self.assertEqual(decoded, self.KEY.authorized_key)
         self.assertTrue(decoded.startswith("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5"))
 
-    def test_maps_the_monthly_pool(self):
+    def test_maps_the_included_monthly_allowance(self):
         windows = ollama.parse_usage("""
         {
-          "activity": { "cost": "0.00000", "period": { "type": "last_4_weeks" }, "models": [] },
-          "limits": { "monthly": { "usage": 0.043, "models": [ { "name": "gpt-oss:120b", "request_count": 32 } ] } }
+          "included": {
+            "balance_usd": 72.5,
+            "allowance_usd": 100,
+            "period": { "from": "2026-09-15T09:30:00Z", "until": "2026-10-15T09:30:00Z" }
+          },
+          "purchased": { "balance_usd": 25 }
         }
         """)
-        self.assertEqual([(w.kind, round(w.used_percent, 1), w.resets_at) for w in windows], [("monthly", 4.3, None)])
+        self.assertEqual([(w.kind, w.used_percent, w.resets_at) for w in windows], [("monthly", 27.5, jsonutil.iso("2026-10-15T09:30:00Z"))])
         self.assertEqual(windows[0].label, "Monthly")
 
-    def test_maps_legacy_windows_and_ignores_invalid_fractions(self):
-        windows = ollama.parse_usage('{ "Limits": { "Session": { "Usage": 0.067 }, "weekly": { "usage": 1.7 } } }')
-        self.assertEqual([w.kind for w in windows], ["session"])
-        self.assertEqual(ollama.parse_usage('{ "limits": {} }'), [])
+    def test_maps_legacy_session_and_weekly_windows(self):
+        windows = ollama.parse_usage("""
+        {
+          "included": {
+            "session": { "remaining_percent": 75, "resets_at": "2026-10-01T07:00:00Z" },
+            "weekly": { "remaining_percent": 40, "resets_at": "2026-10-05T00:00:00Z" }
+          },
+          "purchased": { "balance_usd": 25 }
+        }
+        """)
+        self.assertEqual(
+            [(w.kind, w.used_percent, w.resets_at) for w in windows],
+            [("session", 25.0, jsonutil.iso("2026-10-01T07:00:00Z")), ("weekly", 60.0, jsonutil.iso("2026-10-05T00:00:00Z"))],
+        )
+
+    def test_ignores_invalid_balances(self):
+        self.assertEqual(ollama.parse_usage('{ "Included": { "Session": { "Remaining_Percent": 140 }, "allowance_usd": 0, "balance_usd": 5 } }'), [])
+        self.assertEqual(ollama.parse_usage('{ "included": {}, "purchased": { "balance_usd": 25 } }'), [])
         with self.assertRaises(ProviderIssue):
-            ollama.parse_usage('{ "error": "invalid credentials" }')
+            ollama.parse_usage('{ "error": "unauthorized" }')
 
     def test_reads_the_account_and_treats_an_empty_user_as_not_linked(self):
         linked = '{ "ID": "1", "Email": "me@example.com", "Name": "me", "Plan": "pro" }'
