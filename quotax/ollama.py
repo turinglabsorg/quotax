@@ -25,6 +25,9 @@ from .models import Account, AccountIdentity, ProviderIssue, ProviderSnapshot, U
 BASE_URL = "https://ollama.com"
 CONNECT_URL = "https://ollama.com/connect"
 KEY_FILE = Path(".ollama") / "id_ed25519"
+# `ollama signin` keeps the session in the local daemon. Ollama 0.40 proxies
+# the signed-in account at these paths; the key on disk is not enough.
+DAEMON_URL = "http://127.0.0.1:11434"
 
 
 @dataclass(frozen=True)
@@ -132,6 +135,37 @@ def parse_identity(data: bytes | str | None) -> AccountIdentity | None:
     return AccountIdentity(email or name, capitalized(plan) if plan else None)
 
 
+def daemon_url(path: str) -> str:
+    host = os.environ.get("OLLAMA_HOST", DAEMON_URL).strip().rstrip("/")
+    if "://" not in host:
+        host = "http://" + host
+    return host + path
+
+
+def daemon_request(method: str, path: str) -> bytes | None:
+    """The local server's copy of the signed-in account, or None when it has none."""
+    try:
+        return http.request(method, daemon_url(path), {"Accept": "application/json"})
+    except ProviderIssue as issue:
+        if issue.kind == "network" or (issue.kind == "http" and issue.status in (401, 403, 404, 405)):
+            return None
+        raise
+
+
+def local_identity() -> AccountIdentity | None:
+    """The account `ollama signin` linked, read from the running daemon."""
+    payload = daemon_request("POST", "/api/me")
+    return parse_identity(payload) if payload else None
+
+
+def local_usage() -> list[UsageWindow] | None:
+    payload = daemon_request("GET", "/api/balance")
+    if payload is None:
+        return None
+    windows = parse_usage(payload)
+    return windows or None
+
+
 def whoami(key: OllamaKey) -> AccountIdentity | None:
     """The account this key is linked to, or None while it is not linked."""
     try:
@@ -153,6 +187,15 @@ class OllamaFetcher:
         self.account = account
 
     def fetch(self) -> ProviderSnapshot:
+        windows = local_usage()
+        if windows is not None:
+            identity = local_identity()
+            return ProviderSnapshot(
+                "ollama",
+                (identity.plan if identity else None) or self.account.plan,
+                windows,
+                account=(identity.email if identity else None) or self.account.email,
+            )
         key = read_key(key_path(self.account))
         if key is None:
             raise self._signed_out()

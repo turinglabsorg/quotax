@@ -126,6 +126,8 @@ def detect_cli_login(provider: str) -> AccountIdentity | None:
                 credentials = grok.read_credentials(grok.home_for(Account("grok", "cli")))
                 return AccountIdentity(credentials.email, None) if credentials else None
             case _:
+                if identity := ollama.local_identity():
+                    return identity
                 key = ollama.read_key(ollama.key_path(Account("ollama", "cli")))
                 return ollama.whoami(key) if key else None
     except Exception:  # noqa: BLE001 - a CLI that misbehaves simply has no usable login

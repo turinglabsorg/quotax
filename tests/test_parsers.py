@@ -425,6 +425,24 @@ class OllamaTests(unittest.TestCase):
         with self.assertRaises(ProviderIssue):
             ollama.parse_usage('{ "error": "unauthorized" }')
 
+    def test_reads_the_signed_in_local_daemon(self):
+        def request(method, url, headers):
+            if url.endswith("/api/balance"):
+                return b'{"included":{"balance_usd":40,"allowance_usd":100,"period":{"until":"2026-10-15T00:00:00Z"}}}'
+            if url.endswith("/api/me"):
+                return b'{"email":"me@example.com","name":"me","plan":"max"}'
+            raise AssertionError(url)
+
+        with mock.patch.object(ollama.http, "request", side_effect=request):
+            self.assertEqual(ollama.local_identity(), AccountIdentity("me@example.com", "Max"))
+            windows = ollama.local_usage()
+            self.assertEqual([(w.kind, w.used_percent) for w in windows], [("monthly", 60.0)])
+
+    def test_ignores_a_local_daemon_that_is_not_signed_in(self):
+        with mock.patch.object(ollama.http, "request", side_effect=ProviderIssue("http", status=401)):
+            self.assertIsNone(ollama.local_identity())
+            self.assertIsNone(ollama.local_usage())
+
     def test_reads_the_account_and_treats_an_empty_user_as_not_linked(self):
         linked = '{ "ID": "1", "Email": "me@example.com", "Name": "me", "Plan": "pro" }'
         self.assertEqual(ollama.parse_identity(linked), AccountIdentity("me@example.com", "Pro"))
