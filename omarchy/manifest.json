@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "turinglabs.quotax",
+  "name": "Quotax",
+  "version": "0.1.0",
+  "author": "Turing Labs",
+  "license": "MIT",
+  "description": "Remaining Claude, Codex, Grok and Ollama Cloud usage in the Omarchy bar.",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Quotax",
+    "description": "Subscription usage left for Claude, Codex, Grok and Ollama Cloud.",
+    "category": "Info",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

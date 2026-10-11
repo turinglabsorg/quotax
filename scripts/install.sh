@@ -24,13 +24,59 @@ PY
 
 if [[ ${1:-} == --uninstall ]]; then
     gnome-extensions disable "$UUID" 2>/dev/null || true
-    set_enabled 0
+    set_enabled 0 || true
     rm -rf "$TARGET" "$COMMAND"
+    rm -rf "${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/plugins/turinglabs.quotax"
     echo "Quotax removed. Linked accounts are still in ~/.config/quotax and ~/.local/share/quotax."
     exit 0
 fi
 
+# gnome or wayland. QUOTAX_SURFACE wins, then --gnome/--wayland, then the session.
+surface=${QUOTAX_SURFACE:-}
+case "${1:-}" in
+    --gnome) surface=gnome; shift ;;
+    --wayland) surface=wayland; shift ;;
+esac
+if [[ -z $surface ]]; then
+    desktop="${XDG_CURRENT_DESKTOP:-} ${XDG_SESSION_DESKTOP:-}"
+    if [[ -n ${OMARCHY_PATH:-} || -d /usr/share/omarchy || $desktop == *Hyprland* ]]; then
+        surface=wayland
+    else
+        surface=gnome
+    fi
+fi
+
 python3 -c 'import sys; sys.exit(sys.version_info < (3, 10))' || { echo "Quotax needs Python 3.10 or later." >&2; exit 1; }
+
+install_command() {
+    local backend="$1"
+    mkdir -p "$(dirname "$COMMAND")"
+    cat > "$COMMAND" <<EOF
+#!/bin/sh
+PYTHONPATH="$backend\${PYTHONPATH:+:\$PYTHONPATH}" exec python3 -B -m quotax "\$@"
+EOF
+    chmod +x "$COMMAND"
+}
+
+if [[ $surface == wayland ]]; then
+    plugin="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/plugins/turinglabs.quotax"
+    rm -rf "$plugin"
+    mkdir -p "$plugin/backend"
+    cp -a "$ROOT"/omarchy/. "$plugin"/
+    cp -a "$ROOT/quotax" "$plugin/backend/"
+    find "$plugin" -name __pycache__ -prune -exec rm -rf {} +
+    install_command "$plugin/backend"
+    if command -v omarchy-shell >/dev/null; then
+        omarchy-shell shell rescanPlugins >/dev/null 2>&1 || true
+    fi
+    if command -v omarchy >/dev/null; then
+        omarchy plugin enable turinglabs.quotax --section right >/dev/null 2>&1 || true
+    fi
+    echo "Installed the Quotax bar widget and $COMMAND."
+    echo "Link an account with: quotax link claude"
+    exit 0
+fi
+
 command -v glib-compile-schemas >/dev/null || { echo "glib-compile-schemas is missing (package libglib2.0-bin)." >&2; exit 1; }
 
 rm -rf "$TARGET"
@@ -40,12 +86,7 @@ cp -r "$ROOT/quotax" "$TARGET/backend/"
 find "$TARGET" -name __pycache__ -prune -exec rm -rf {} +
 glib-compile-schemas "$TARGET/schemas"
 
-mkdir -p "$(dirname "$COMMAND")"
-cat > "$COMMAND" <<EOF
-#!/bin/sh
-PYTHONPATH="$TARGET/backend\${PYTHONPATH:+:\$PYTHONPATH}" exec python3 -B -m quotax "\$@"
-EOF
-chmod +x "$COMMAND"
+install_command "$TARGET/backend"
 
 set_enabled 1
 if [[ $(gsettings get org.gnome.shell disable-user-extensions) == true ]]; then

@@ -42,7 +42,9 @@ cd quotax
 scripts/install.sh
 ```
 
-Then log out and back in: GNOME Shell on Wayland only discovers new extensions at login. The script copies the extension to `~/.local/share/gnome-shell/extensions/quotax@turinglabs.org`, installs the `quotax` command in `~/.local/bin` and adds the extension to your enabled extensions.
+On Hyprland (including Omarchy) this installs the bar widget in `omarchy/` and the `quotax` command. On GNOME it installs the Shell extension and the command. Force one with `--gnome` or `--wayland`.
+
+On GNOME, log out and back in: GNOME Shell on Wayland only discovers new extensions at login. The script copies the extension to `~/.local/share/gnome-shell/extensions/quotax@turinglabs.org`, installs the `quotax` command in `~/.local/bin` and adds the extension to your enabled extensions.
 
 `scripts/install.sh --uninstall` removes both. Linked accounts stay in `~/.config/quotax` and `~/.local/share/quotax` until you delete them.
 
