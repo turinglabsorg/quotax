@@ -80,5 +80,14 @@
   "No linked account with this ID.": "Nessun account collegato con questo ID.",
   "Not signed in to Ollama Cloud. Run `ollama signin`.": "Nessun login a Ollama Cloud. Esegui `ollama signin`.",
   "Ollama Cloud session expired: relink the account.": "Sessione Ollama Cloud scaduta: ricollega l'account.",
-  "Choose which Claude, Codex, Grok and Ollama Cloud accounts to monitor.": "Scegli tu quali account di Claude, Codex, Grok e Ollama Cloud monitorare."
+  "Choose which Claude, Codex, Grok and Ollama Cloud accounts to monitor.": "Scegli tu quali account di Claude, Codex, Grok e Ollama Cloud monitorare.",
+  "Choose which Claude, Codex, Grok, Ollama Cloud and Muse Code accounts to monitor.": "Scegli tu quali account di Claude, Codex, Grok, Ollama Cloud e Muse monitorare.",
+  "Today": "Oggi",
+  "Last 7 days": "Ultimi 7 giorni",
+  "tokens": "token",
+  "{label}: {total} tokens{reset}": "{label}: {total} token{reset}",
+  "in {input} · out {output} · cache {cached} · reasoning {reasoning} · {sessions} sessions · {steps} steps": "in {input} · out {output} · cache {cached} · reasoning {reasoning} · {sessions} sessioni · {steps} step",
+  "No Muse usage found on this computer.": "Nessun utilizzo di Muse trovato su questo computer.",
+  "Muse Code has no separate sign-in: link the local login instead.": "Muse non ha un accesso separato: collega invece il login locale.",
+  "Local session logs only: nothing is sent anywhere.": "Solo i log di sessione locali: non viene inviato nulla."
 }

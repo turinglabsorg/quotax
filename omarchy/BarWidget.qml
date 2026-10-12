@@ -72,7 +72,16 @@ BarWidget {
     if (provider === "codex") return "Codex"
     if (provider === "grok") return "Grok"
     if (provider === "ollama") return "Ollama"
+    if (provider === "musecode") return "Muse Code"
     return provider || "Quota"
+  }
+
+  function compactTokens(count) {
+    var value = Number(count)
+    if (!isFinite(value)) return "0"
+    if (value >= 1000000) return String(Math.round(value / 10000) / 100) + "M"
+    if (value >= 1000) return String(Math.round(value / 100) / 10) + "k"
+    return String(Math.trunc(value))
   }
 
   function tightest(values) {
@@ -134,7 +143,7 @@ BarWidget {
     try { event = JSON.parse(line) } catch (error) { return }
     if (!event) return
     if (event.type === "done") {
-      var order = { claude: 0, codex: 1, grok: 2, ollama: 3 }
+      var order = { claude: 0, codex: 1, grok: 2, ollama: 3, musecode: 4 }
       var sorted = root.pending.slice()
       sorted.sort(function(a, b) {
         var ao = order[a.provider] === undefined ? 9 : order[a.provider]
@@ -160,6 +169,8 @@ BarWidget {
         plan: prev ? prev.plan : "",
         windows: kept && prev ? prev.windows : [],
         barValues: kept && prev ? prev.barValues : [],
+        barText: kept && prev ? (prev.barText || "") : "",
+        tokenUsage: kept && prev ? (prev.tokenUsage || []) : [],
         issue: String(issue.message || "Unavailable")
       })
       root.fresh = kept
@@ -181,6 +192,11 @@ BarWidget {
     var shown = panelWindows(windows)
     var values = []
     for (var s = 0; s < shown.length; s++) values.push(shown[s].remaining)
+    var tokenUsage = snapshot.tokenUsage || []
+    var barText = ""
+    for (var t = 0; t < tokenUsage.length; t++) {
+      if (tokenUsage[t].period === "today") barText = compactTokens(tokenUsage[t].totalTokens)
+    }
     remember({
       id: id || String(snapshot.provider || ""),
       provider: String(snapshot.provider || (prev ? prev.provider : "")),
@@ -189,6 +205,8 @@ BarWidget {
       plan: String(snapshot.plan || ""),
       windows: windows,
       barValues: values,
+      barText: barText,
+      tokenUsage: tokenUsage,
       issue: ""
     })
   }
@@ -269,13 +287,25 @@ BarWidget {
           }
 
           Text {
-            visible: account.valueCount === 0
+            visible: account.valueCount === 0 && (modelData.barText || "") === ""
             text: "–"
             textFormat: Text.PlainText
             color: root.foreground
             opacity: 0.45
             font.family: root.fontFamily
             font.pixelSize: Style.font.bodySmall
+          }
+
+          Text {
+            visible: (modelData.barText || "") !== ""
+            text: modelData.barText || ""
+            textFormat: Text.PlainText
+            color: root.foreground
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.bodySmall
+            font.weight: Font.Medium
+            font.hintingPreference: Font.PreferVerticalHinting
+            renderType: Text.NativeRendering
           }
         }
       }
@@ -453,6 +483,71 @@ BarWidget {
                     NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
                   }
                 }
+              }
+
+              Text {
+                visible: modelData.resetsAt !== null && modelData.resetsAt !== undefined
+                text: "Resets in " + root.countdown(modelData.resetsAt)
+                color: root.foreground
+                opacity: 0.62
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+              }
+            }
+          }
+
+          Repeater {
+            model: modelData.tokenUsage || []
+            delegate: Column {
+              required property var modelData
+              width: accountBlock.width
+              spacing: 3
+
+              Item {
+                width: parent.width
+                height: Math.max(tokenLabel.implicitHeight, tokenValue.implicitHeight)
+
+                Text {
+                  id: tokenLabel
+                  anchors.left: parent.left
+                  anchors.right: tokenValue.left
+                  anchors.rightMargin: 8
+                  anchors.verticalCenter: parent.verticalCenter
+                  textFormat: Text.PlainText
+                  text: modelData.label
+                  color: root.foreground
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.bodySmall
+                  elide: Text.ElideRight
+                }
+
+                Text {
+                  id: tokenValue
+                  anchors.right: parent.right
+                  anchors.verticalCenter: parent.verticalCenter
+                  textFormat: Text.PlainText
+                  text: root.compactTokens(modelData.totalTokens) + " tokens"
+                  color: root.foreground
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.bodySmall
+                  font.bold: true
+                }
+              }
+
+              Text {
+                width: parent.width
+                textFormat: Text.PlainText
+                text: "in " + root.compactTokens(modelData.inputTokens)
+                  + " · out " + root.compactTokens(modelData.outputTokens)
+                  + " · cache " + root.compactTokens(modelData.cachedTokens)
+                  + " · reasoning " + root.compactTokens(modelData.reasoningTokens)
+                  + " · " + Number(modelData.sessions || 0) + " sessions"
+                  + " · " + Number(modelData.steps || 0) + " steps"
+                color: root.foreground
+                opacity: 0.62
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                wrapMode: Text.WordWrap
               }
 
               Text {

@@ -1,6 +1,6 @@
 # Quotax: agent instructions
 
-GNOME Shell extension (GJS, ESM) plus a standard-library Python backend that shows remaining subscription usage for the Claude, Codex, Grok and Ollama Cloud accounts the user links. Linux port of the macOS app (github.com/turinglabsorg/quota): keep behavior, data sources and copy in sync with it.
+GNOME Shell extension (GJS, ESM) plus a standard-library Python backend that shows remaining subscription usage for the Claude, Codex, Grok and Ollama Cloud accounts the user links, plus local Muse Code token usage. Linux port of the macOS app (github.com/turinglabsorg/quota): keep behavior, data sources and copy in sync with it (Muse Code is Linux-local and has no macOS counterpart).
 
 ## Layout
 
@@ -47,6 +47,7 @@ Mirrors the macOS app and Orca (github.com/stablyai/orca, `src/main/rate-limits`
 - Codex: JSON-RPC `account/read` + `account/rateLimits/read` on `codex app-server`; fallback `GET https://chatgpt.com/backend-api/wham/usage` for the shared login when the CLI is missing.
 - Grok: `GET https://cli-chat-proxy.grok.com/v1/billing?format=credits` with `X-XAI-Token-Auth: xai-grok-cli`, falling back to `/v1/billing` for monthly budgets. The API omits zero-valued fields: a missing `creditUsagePercent` means 0% only when the weekly `currentPeriod` matches `billingPeriodStart/End` and no field shows explicit zeros or spend (same rule as Orca).
 - Ollama Cloud: `GET https://ollama.com/api/balance` (documented in ollama/ollama `docs/api/balance.mdx`: `included.balance_usd` left of `included.allowance_usd`, resetting at `included.period.until`; legacy plans return `included.session`/`included.weekly` with `remaining_percent` and `resets_at`; 10 requests/minute per user). `GET /api/usage` is only the spend history, not the limits and `POST https://ollama.com/api/me` for email and plan. Requests are signed as in ollama/ollama `api/client.go`: `Authorization: <base64 public key blob>:<base64 Ed25519 signature of "<METHOD>,<path>?ts=<unix>">` with the same `ts` in the query. ollama.com answers with Go field names (`Email`, `Plan`), so parse keys case-insensitively. Ed25519 lives in `quotax/ed25519.py` (stdlib only, RFC 8032 vectors in the tests).
+- Muse Code (`musecode`, local only, no sign-in and no network): the `model_completed` records in `~/.local/share/muse/sessions/YYYY/MM/DD/<session>/session.jsonl` (plus `subagent/` logs, attributed to the parent session), aggregated by local day into today and last-7-days `TokenUsage` (input includes cached; reasoning is part of output). Snapshots carry `tokenUsage` instead of quota `windows`; the menu shows token rows and the top bar shows today's compact total.
 
 ## Rules
 

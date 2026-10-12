@@ -12,7 +12,7 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import {Glyph, UsageBar} from './glyphs.js';
 import {_} from './i18n.js';
 import {
-    CLI_NAMES, DISPLAY_NAMES, PROVIDERS, countdown, displaySuffix, displayValue, hasReset, nowSeconds,
+    CLI_NAMES, DISPLAY_NAMES, PROVIDERS, countdown, displaySuffix, displayValue, formatTokens, hasReset, nowSeconds,
     panelWindows, relative, remainingAt, usageLevel,
 } from './model.js';
 
@@ -112,6 +112,24 @@ class QuotaIndicator extends PanelMenu.Button {
         let shown = 0;
         for (const account of this._accounts.accounts) {
             const entry = this._store.entries.get(account.id);
+            // Muse Code reports token counts, not quota percentages: the top bar shows today's total.
+            if (account.provider === 'musecode') {
+                const today = entry?.snapshot?.tokenUsage?.find(usage => usage.period === 'today');
+                if (!today)
+                    continue;
+                const item = new St.BoxLayout({style_class: 'quota-panel-item'});
+                if (entry.issue)
+                    item.opacity = 140;
+                item.add_child(new Glyph(account.provider, 'quota-panel-glyph'));
+                item.add_child(new St.Label({
+                    text: formatTokens(today.totalTokens),
+                    style_class: 'quota-panel-label',
+                    y_align: Clutter.ActorAlign.CENTER,
+                }));
+                this._panelBox.add_child(item);
+                shown++;
+                continue;
+            }
             const windows = entry?.snapshot ? panelWindows(entry.snapshot, now) : [];
             if (!windows.length)
                 continue;
@@ -263,7 +281,7 @@ class QuotaIndicator extends PanelMenu.Button {
     _emptyState() {
         const card = new St.BoxLayout({style_class: 'quota-card', orientation: VERTICAL});
         card.add_child(new St.Label({text: _('No linked accounts'), style_class: 'quota-card-title'}));
-        card.add_child(wrapped(_('Choose which Claude, Codex, Grok and Ollama Cloud accounts to monitor.'), 'quota-body'));
+        card.add_child(wrapped(_('Choose which Claude, Codex, Grok, Ollama Cloud and Muse Code accounts to monitor.'), 'quota-body'));
         const add = new St.Button({
             label: _('Add account'),
             style_class: 'button default quota-small-button',
@@ -333,6 +351,9 @@ class QuotaIndicator extends PanelMenu.Button {
         for (const window of entry?.snapshot?.windows ?? [])
             card.add_child(this._windowRow(window, now));
 
+        for (const usage of entry?.snapshot?.tokenUsage ?? [])
+            card.add_child(this._tokenRow(usage, now));
+
         if (entry?.issue) {
             const text = entry.snapshot
                 ? _('Data from {time}. {message}', {time: relative(entry.snapshot.fetchedAt, now), message: entry.issue.message})
@@ -364,6 +385,30 @@ class QuotaIndicator extends PanelMenu.Button {
                 ? _('Reset, updating')
                 : _('Resets in {countdown}', {countdown: countdown(window.resetsAt, now)})));
         }
+        return row;
+    }
+
+    _tokenRow(usage, now) {
+        const row = new St.BoxLayout({style_class: 'quota-window', orientation: VERTICAL});
+
+        const line = new St.BoxLayout({style_class: 'quota-window-line'});
+        line.add_child(new St.Label({text: usage.label, style_class: 'quota-window-label', x_expand: true}));
+        line.add_child(new St.Label({text: formatTokens(usage.totalTokens), style_class: 'quota-window-value'}));
+        const suffix = secondary(_('tokens'));
+        suffix.y_align = Clutter.ActorAlign.END;
+        line.add_child(suffix);
+        row.add_child(line);
+
+        row.add_child(wrapped(_('in {input} · out {output} · cache {cached} · reasoning {reasoning} · {sessions} sessions · {steps} steps', {
+            input: formatTokens(usage.inputTokens),
+            output: formatTokens(usage.outputTokens),
+            cached: formatTokens(usage.cachedTokens),
+            reasoning: formatTokens(usage.reasoningTokens),
+            sessions: usage.sessions,
+            steps: usage.steps,
+        }), 'quota-secondary'));
+        if (usage.resetsAt)
+            row.add_child(secondary(_('Resets in {countdown}', {countdown: countdown(usage.resetsAt, now)})));
         return row;
     }
 
@@ -400,7 +445,11 @@ class QuotaIndicator extends PanelMenu.Button {
         header.add_child(new St.Label({text: DISPLAY_NAMES[provider], style_class: 'quota-card-title', y_align: Clutter.ActorAlign.CENTER}));
         card.add_child(header);
         card.add_child(this._sharedLoginRow(provider));
-        card.add_child(this._signInRow(provider));
+        // Muse Code is local only: there is no second account to sign in to.
+        if (provider === 'musecode')
+            card.add_child(wrapped(_('Local session logs only: nothing is sent anywhere.'), 'quota-body'));
+        else
+            card.add_child(this._signInRow(provider));
         return card;
     }
 

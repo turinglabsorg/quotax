@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from . import __version__, process
 from .accounts import AccountStore, LinkError, detect_cli_login, fetch, link_shared_login, sign_in, unlink
-from .formatting import countdown
+from .formatting import countdown, format_tokens
 from .i18n import _
 from .models import DISPLAY_NAMES, PROVIDERS, Account, AccountIdentity, ProviderIssue
 
@@ -20,7 +20,7 @@ def main(argv: list[str] | None = None) -> int:
     for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
         signal.signal(sig, _stop)
 
-    parser = argparse.ArgumentParser(prog="quotax", description="Remaining Claude, Codex, Grok and Ollama Cloud subscription usage.")
+    parser = argparse.ArgumentParser(prog="quotax", description="Remaining Claude, Codex, Grok and Ollama Cloud subscription usage, plus local Muse Code token usage.")
     parser.add_argument("--version", action="version", version=f"quotax {__version__}")
     commands = parser.add_subparsers(dest="command")
     commands.add_parser("print", help="print usage for the linked accounts (default)")
@@ -120,6 +120,18 @@ def _print_result(account: Account, snapshot, issue) -> None:
         return
     now = time.time()
     print(f"{title} ({snapshot.plan})" if snapshot.plan else title)
+    for usage in snapshot.token_usage:
+        reset = _(", resets in {countdown}", countdown=countdown(usage.resets_at, now)) if usage.resets_at else ""
+        print("  " + _("{label}: {total} tokens{reset}", label=usage.label, total=format_tokens(usage.total_tokens), reset=reset))
+        print("    " + _(
+            "in {input} · out {output} · cache {cached} · reasoning {reasoning} · {sessions} sessions · {steps} steps",
+            input=format_tokens(usage.input_tokens),
+            output=format_tokens(usage.output_tokens),
+            cached=format_tokens(usage.cached_tokens),
+            reasoning=format_tokens(usage.reasoning_tokens),
+            sessions=usage.sessions,
+            steps=usage.steps,
+        ))
     for window in snapshot.windows:
         reset = _(", resets in {countdown}", countdown=countdown(window.resets_at, now)) if window.resets_at else ""
         print("  " + _("{label}: {percent}% left{reset}", label=window.label, percent=window.remaining_at(now), reset=reset))

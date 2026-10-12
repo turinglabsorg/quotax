@@ -13,7 +13,7 @@ import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
 
-from . import claude, codex, grok, ollama, paths, process, sample
+from . import claude, codex, grok, musecode, ollama, paths, process, sample
 from .i18n import _
 from .models import DISPLAY_NAMES, PROVIDERS, Account, AccountIdentity, ProviderIssue, ProviderSnapshot
 
@@ -95,6 +95,8 @@ def fetch(account: Account) -> ProviderSnapshot:
             return codex.CodexFetcher(account).fetch()
         case "grok":
             return grok.GrokFetcher(account).fetch()
+        case "musecode":
+            return musecode.MuseCodeFetcher(account).fetch()
         case _:
             return ollama.OllamaFetcher(account).fetch()
 
@@ -125,6 +127,9 @@ def detect_cli_login(provider: str) -> AccountIdentity | None:
             case "grok":
                 credentials = grok.read_credentials(grok.home_for(Account("grok", "cli")))
                 return AccountIdentity(credentials.email, None) if credentials else None
+            case "musecode":
+                model = musecode.detect_model()
+                return AccountIdentity(None, model) if model else None
             case _:
                 if identity := ollama.local_identity():
                     return identity
@@ -147,6 +152,9 @@ def link_shared_login(provider: str, identity: AccountIdentity | None) -> Accoun
 
 def sign_in(provider: str, account_id: str, on_login_url: Callable[[str], None]) -> AccountIdentity:
     """Runs the official sign-in in an isolated home; the user signs in on the provider's page."""
+    # Muse Code is local only: there is no second account to sign in to.
+    if provider == "musecode":
+        raise LinkError(_("Muse Code has no separate sign-in: link the local login instead."))
     # Ollama Cloud links a key in the browser and needs no CLI; the others sign in through theirs.
     needs_cli = provider != "ollama"
     executable = process.locate(provider) if needs_cli else None

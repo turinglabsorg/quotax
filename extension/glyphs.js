@@ -53,6 +53,20 @@ const SHAPES = {
             cr.lineTo(size * x, size * 0.64);
         }
     },
+    // Four-point spark.
+    musecode(cr, size) {
+        const points = [
+            [0.5, 0.04], [0.6, 0.4], [0.96, 0.5], [0.6, 0.6],
+            [0.5, 0.96], [0.4, 0.6], [0.04, 0.5], [0.4, 0.4],
+        ];
+        points.forEach(([x, y], index) => {
+            if (index === 0)
+                cr.moveTo(size * x, size * y);
+            else
+                cr.lineTo(size * x, size * y);
+        });
+        cr.closePath();
+    },
     // Gauge with the needle at one third, shown when nothing is linked yet.
     gauge(cr, size) {
         const center = size / 2;

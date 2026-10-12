@@ -36,6 +36,15 @@ def absolute(date: float) -> str:
     return time.strftime("%a %d %b %H:%M", time.localtime(date))
 
 
+def format_tokens(count: int) -> str:
+    """Compact token counts: 950, 45.2k, 1.25M."""
+    if count >= 1_000_000:
+        return f"{count / 1_000_000:.2f}".rstrip("0").rstrip(".") + "M"
+    if count >= 1_000:
+        return f"{count / 1_000:.1f}".rstrip("0").rstrip(".") + "k"
+    return str(count)
+
+
 def capitalized(value: str) -> str:
     trimmed = value.strip()
     return trimmed[:1].upper() + trimmed[1:]

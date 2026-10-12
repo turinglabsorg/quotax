@@ -5,14 +5,14 @@
   "version": "0.1.0",
   "author": "Turing Labs",
   "license": "MIT",
-  "description": "Remaining Claude, Codex, Grok and Ollama Cloud usage in the Omarchy bar.",
+  "description": "Remaining Claude, Codex, Grok and Ollama Cloud usage, plus local Muse Code token usage, in the Omarchy bar.",
   "kinds": ["bar-widget"],
   "entryPoints": {
     "barWidget": "BarWidget.qml"
   },
   "barWidget": {
     "displayName": "Quotax",
-    "description": "Subscription usage left for Claude, Codex, Grok and Ollama Cloud.",
+    "description": "Subscription usage left for Claude, Codex, Grok and Ollama Cloud, plus Muse Code tokens.",
     "category": "Info",
     "allowMultiple": false,
     "defaultSection": "right"

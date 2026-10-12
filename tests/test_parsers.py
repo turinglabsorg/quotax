@@ -8,9 +8,9 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from quotax import accounts, claude, codex, ed25519, grok, jsonutil, ollama, paths
-from quotax.formatting import countdown
-from quotax.models import Account, AccountIdentity, ProviderIssue, ProviderSnapshot, UsageWindow, usage_level
+from quotax import accounts, claude, codex, ed25519, grok, jsonutil, musecode, ollama, paths
+from quotax.formatting import countdown, format_tokens
+from quotax.models import Account, AccountIdentity, ProviderIssue, ProviderSnapshot, TokenUsage, UsageWindow, usage_level
 
 os.environ["LANGUAGE"] = "en"
 
@@ -471,6 +471,70 @@ class OllamaTests(unittest.TestCase):
             accounts.unlink(account)
             disconnect.assert_called_once_with(key)
             self.assertFalse(account.home.exists())
+
+
+class MuseCodeTests(unittest.TestCase):
+    def _write_log(self, root: Path, when: float, session_id: str, lines: list[str], subagent: bool = False) -> None:
+        local = time.localtime(when)
+        directory = root / f"{local.tm_year:04d}" / f"{local.tm_mon:02d}" / f"{local.tm_mday:02d}" / session_id
+        if subagent:
+            directory = directory / "subagent" / "child-1"
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / "session.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    @staticmethod
+    def _record(when: float, session_id: str, usage: dict, model: str = "muse-wonder-1.0") -> str:
+        envelope = {
+            "recorded_at": int(when * 1_000_000),
+            "stream": {"kind": "session", "id": session_id},
+            "payload": {"event": {"kind": "model_completed", "model": model, "usage": usage}},
+        }
+        return json.dumps(envelope)
+
+    def test_aggregates_today_and_last_seven_days(self):
+        now = time.time()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._write_log(root, now, "session-a", [
+                self._record(now, "session-a", {"input_tokens": 1000, "output_tokens": 50, "cached_tokens": 800, "cache_write_tokens": 10, "reasoning_tokens": 5}),
+                self._record(now, "session-a", {"input_tokens": 500, "output_tokens": 25, "cache_read_tokens": 400}),
+                "not json",
+                json.dumps({"recorded_at": int(now * 1_000_000), "payload": {"event": {"kind": "model_response_created"}}}),
+            ])
+            self._write_log(root, now, "session-a", [
+                self._record(now, "session-a", {"input_tokens": 200, "output_tokens": 10, "cached_tokens": 100, "reasoning_tokens": 0}),
+            ], subagent=True)
+            self._write_log(root, now - 3 * 86_400, "session-b", [
+                self._record(now - 3 * 86_400, "session-b", {"input_tokens": 2000, "output_tokens": 100, "cached_tokens": 1500, "reasoning_tokens": 20}),
+            ])
+            self._write_log(root, now - 10 * 86_400, "session-old", [
+                self._record(now - 10 * 86_400, "session-old", {"input_tokens": 9999, "output_tokens": 9999, "cached_tokens": 0, "reasoning_tokens": 0}),
+            ])
+            usage, model = musecode.aggregate(root, now=now)
+        today, week = usage
+        self.assertEqual(model, "muse-wonder-1.0")
+        self.assertEqual((today.input_tokens, today.output_tokens, today.cached_tokens, today.cache_write_tokens, today.reasoning_tokens), (1700, 85, 1300, 10, 5))
+        self.assertEqual((today.sessions, today.steps, today.total_tokens), (1, 3, 1785))
+        self.assertIsNotNone(today.resets_at)
+        self.assertEqual((week.input_tokens, week.output_tokens, week.steps, week.sessions), (3700, 185, 4, 2))
+        self.assertIsNone(week.resets_at)
+        self.assertEqual(today.label, "Today")
+        self.assertEqual(week.label, "Last 7 days")
+
+    def test_reports_no_usage_for_an_empty_root(self):
+        with tempfile.TemporaryDirectory() as directory:
+            usage, model = musecode.aggregate(Path(directory))
+            self.assertIsNone(model)
+            self.assertFalse(any(period.steps for period in usage))
+            with mock.patch.dict(os.environ, {"XDG_DATA_HOME": directory}):
+                with self.assertRaises(ProviderIssue):
+                    musecode.MuseCodeFetcher(Account("musecode", "cli")).fetch()
+
+    def test_formats_token_counts(self):
+        self.assertEqual(format_tokens(950), "950")
+        self.assertEqual(format_tokens(45_200), "45.2k")
+        self.assertEqual(format_tokens(1_250_000), "1.25M")
+        self.assertEqual(TokenUsage("today", 100, 5, 80, 0, 1).total_tokens, 105)
 
 
 class CatalogTests(unittest.TestCase):

@@ -1,6 +1,6 @@
 # Quotax
 
-A small GNOME Shell extension that shows how much of your **Claude**, **Codex**, **Grok** and **Ollama Cloud** subscription limits you have left, at a glance, in the top bar.
+A small GNOME Shell extension that shows how much of your **Claude**, **Codex**, **Grok** and **Ollama Cloud** subscription limits you have left, at a glance, in the top bar. It also shows your local **Muse Code** token usage, read from the session logs on this computer.
 
 This is the Linux port of [Quota for macOS](https://github.com/turinglabsorg/quota): same data sources, same account model, same design, rebuilt as a GNOME Shell extension with a small Python backend.
 
@@ -11,8 +11,8 @@ This is the Linux port of [Quota for macOS](https://github.com/turinglabsorg/quo
 
 ## Features
 
-- **Top bar**: one percentage per linked account, showing the tightest account-wide window. Accounts with both a 5-hour session and a weekly (or monthly) window, like Claude, show both in a small stacked column: session above, weekly below. Orange under 20%, red at 5% or less.
-- **Menu**: every window (5-hour session, weekly, model-scoped weekly, monthly) with a bar and a reset countdown. Long lists scroll.
+- **Top bar**: one percentage per linked account, showing the tightest account-wide window. Accounts with both a 5-hour session and a weekly (or monthly) window, like Claude, show both in a small stacked column: session above, weekly below. Orange under 20%, red at 5% or less. Muse Code has no quota percentage: its top bar value is today's token total.
+- **Menu**: every window (5-hour session, weekly, model-scoped weekly, monthly) with a bar and a reset countdown. The Muse Code card shows today's and the last 7 days' tokens with the input, output, cache and reasoning breakdown, sessions and steps. Long lists scroll.
 - **You choose the accounts**: reuse the login of a CLI already on your computer, or sign in to more accounts in the browser. New sign-ins are kept separate from your CLI sessions, so you can monitor several accounts per service.
 - **Settings**: show remaining or used percentage.
 - **Command line**: `quotax` prints the same data in a terminal.
@@ -27,6 +27,7 @@ This is the Linux port of [Quota for macOS](https://github.com/turinglabsorg/quo
 | Codex (ChatGPT login) | Free, Plus, Pro, Business | as reported by Codex (5-hour, weekly or 30-day) |
 | Grok (Grok CLI login) | SuperGrok and Grok plans with weekly or monthly credits | weekly credits or monthly budget |
 | Ollama Cloud (ollama.com account) | Free, Pro, Max, Team | included monthly credit (legacy plans: 5-hour session and weekly) |
+| Muse Code (`muse` CLI, local only) | any | tokens used today and in the last 7 days (input, output, cache, reasoning), sessions and steps |
 
 ## Requirements
 
@@ -62,7 +63,7 @@ The same works from a terminal:
 ```bash
 quotax                     # usage for the linked accounts (or the detected CLI logins if none are linked)
 quotax detect              # logins found for each CLI
-quotax link claude         # link the Claude Code login (also: codex, grok)
+quotax link claude         # link the Claude Code login (also: codex, grok, musecode)
 quotax signin codex        # sign in to another Codex account in the browser
 quotax accounts            # linked accounts and their IDs
 quotax unlink <id>         # stop monitoring an account
@@ -78,6 +79,7 @@ Every command accepts `--json`, which prints one JSON event per line. The extens
 | Codex | JSON-RPC `account/rateLimits/read` on `codex app-server`, so Codex refreshes its own token |
 | Grok | `GET cli-chat-proxy.grok.com/v1/billing` with the Grok CLI token |
 | Ollama Cloud | [`GET ollama.com/api/balance`](https://github.com/ollama/ollama/blob/main/docs/api/balance.mdx) and `POST ollama.com/api/me`, signed with an Ed25519 device key like the Ollama CLI does |
+| Muse Code | the `model_completed` records in the local session logs under `~/.local/share/muse/sessions` (read-only, nothing is sent anywhere) |
 
 Quotax refreshes every 5 minutes, after resume from suspend, when a window resets and when you open the menu (if the data is more than a minute old). It only talks to the services above.
 

@@ -3,10 +3,10 @@
 import os
 import time
 
-from .models import Account, AccountIdentity, ProviderSnapshot, UsageWindow
+from .models import Account, AccountIdentity, ProviderSnapshot, TokenUsage, UsageWindow
 
 EMAIL = "name@example.com"
-PLANS = {"claude": "Team", "codex": "Business", "grok": "SuperGrok", "ollama": "Max"}
+PLANS = {"claude": "Team", "codex": "Business", "grok": "SuperGrok", "ollama": "Max", "musecode": "muse-wonder-1.0"}
 
 
 def enabled() -> bool:
@@ -22,6 +22,13 @@ def snapshot(account: Account) -> ProviderSnapshot:
 
     def later(days=0, hours=0, minutes=0):
         return now + days * 86_400 + hours * 3_600 + minutes * 60 + 30
+
+    if account.provider == "musecode":
+        token_usage = [
+            TokenUsage("today", 812_400, 9_310, 701_220, 12_480, 1_140, sessions=2, steps=18, resets_at=later(days=1)),
+            TokenUsage("last7Days", 4_208_150, 51_730, 3_540_900, 40_210, 6_205, sessions=9, steps=96),
+        ]
+        return ProviderSnapshot("musecode", PLANS["musecode"], [], account=account.email, fetched_at=now - 125, token_usage=token_usage)
 
     if account.provider == "claude" and account.source == "managed":
         windows = [

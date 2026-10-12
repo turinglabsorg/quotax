@@ -1,8 +1,17 @@
 import {_} from './i18n.js';
 
-export const PROVIDERS = ['claude', 'codex', 'grok', 'ollama'];
-export const DISPLAY_NAMES = {claude: 'Claude', codex: 'Codex', grok: 'Grok', ollama: 'Ollama Cloud'};
-export const CLI_NAMES = {claude: 'Claude Code', codex: 'Codex', grok: 'Grok', ollama: 'Ollama'};
+export const PROVIDERS = ['claude', 'codex', 'grok', 'ollama', 'musecode'];
+export const DISPLAY_NAMES = {claude: 'Claude', codex: 'Codex', grok: 'Grok', ollama: 'Ollama Cloud', musecode: 'Muse Code'};
+export const CLI_NAMES = {claude: 'Claude Code', codex: 'Codex', grok: 'Grok', ollama: 'Ollama', musecode: 'Muse'};
+
+// Compact token counts: 950, 45.2k, 1.25M.
+export function formatTokens(count) {
+    if (count >= 1_000_000)
+        return `${parseFloat((count / 1_000_000).toFixed(2))}M`;
+    if (count >= 1_000)
+        return `${parseFloat((count / 1_000).toFixed(1))}k`;
+    return `${count}`;
+}
 
 export function nowSeconds() {
     return Date.now() / 1000;

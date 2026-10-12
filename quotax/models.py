@@ -9,9 +9,9 @@ from . import paths
 from .formatting import duration, rounded
 from .i18n import _
 
-PROVIDERS = ("claude", "codex", "grok", "ollama")
-DISPLAY_NAMES = {"claude": "Claude", "codex": "Codex", "grok": "Grok", "ollama": "Ollama Cloud"}
-CLI_NAMES = {"claude": "Claude Code", "codex": "Codex", "grok": "Grok", "ollama": "Ollama"}
+PROVIDERS = ("claude", "codex", "grok", "ollama", "musecode")
+DISPLAY_NAMES = {"claude": "Claude", "codex": "Codex", "grok": "Grok", "ollama": "Ollama Cloud", "musecode": "Muse Code"}
+CLI_NAMES = {"claude": "Claude Code", "codex": "Codex", "grok": "Grok", "ollama": "Ollama", "musecode": "Muse"}
 
 
 @dataclass
@@ -108,12 +108,52 @@ class UsageWindow:
 
 
 @dataclass
+class TokenUsage:
+    """Token consumption over a period, for providers that report usage instead of quota windows."""
+
+    period: str  # today | last7Days
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cached_tokens: int = 0
+    cache_write_tokens: int = 0
+    reasoning_tokens: int = 0
+    sessions: int = 0
+    steps: int = 0
+    resets_at: float | None = None  # seconds since the epoch
+
+    @property
+    def total_tokens(self) -> int:
+        # input_tokens already includes cached_tokens; reasoning_tokens are part of output_tokens.
+        return self.input_tokens + self.output_tokens
+
+    @property
+    def label(self) -> str:
+        return _("Today") if self.period == "today" else _("Last 7 days")
+
+    def to_json(self) -> dict:
+        return {
+            "period": self.period,
+            "label": self.label,
+            "inputTokens": self.input_tokens,
+            "outputTokens": self.output_tokens,
+            "cachedTokens": self.cached_tokens,
+            "cacheWriteTokens": self.cache_write_tokens,
+            "reasoningTokens": self.reasoning_tokens,
+            "totalTokens": self.total_tokens,
+            "sessions": self.sessions,
+            "steps": self.steps,
+            "resetsAt": self.resets_at,
+        }
+
+
+@dataclass
 class ProviderSnapshot:
     provider: str
     plan: str | None
     windows: list[UsageWindow]
     account: str | None = None
     fetched_at: float = field(default_factory=time.time)
+    token_usage: list[TokenUsage] = field(default_factory=list)
 
     def tightest_window(self, now: float) -> UsageWindow | None:
         """Model-scoped limits do not block the whole account, so they only count when nothing else is reported."""
@@ -128,6 +168,7 @@ class ProviderSnapshot:
             "account": self.account,
             "fetchedAt": self.fetched_at,
             "windows": [window.to_json() for window in self.windows],
+            "tokenUsage": [usage.to_json() for usage in self.token_usage],
         }
 
 

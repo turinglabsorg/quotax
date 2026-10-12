@@ -59,6 +59,7 @@ Custom stroked shapes drawn with Cairo in `extension/glyphs.js`, line width 15% 
 - **Codex**: terminal prompt `>_`.
 - **Grok**: open ring with a diagonal slash.
 - **Ollama Cloud**: llama head, two ears leaning outwards over a rounded head with two eye dots.
+- **Muse Code**: four-point spark.
 - **Gauge**: arc with a needle at one third, in the top bar when nothing is available yet.
 
 ## Components
@@ -69,6 +70,7 @@ Custom stroked shapes drawn with Cairo in `extension/glyphs.js`, line width 15% 
 - **Empty state**: card with title, one-line explanation and a small `.button.default` "Add account".
 - **Add account page**: back chevron + title; one provider card per service with the detected CLI login ("Link" small button, or "Linked" with a checkmark) and a sign-in row ("Sign in to another account…" → spinner + "Finish signing in in your browser…" + link + "Cancel", or issue line + "Try again"); footnote explaining that sign-in happens in the browser.
 - **Window row**: label, value + suffix (`left`/`used`), usage bar, reset countdown.
+- **Token row** (Muse Code): period label, compact token total + `tokens` suffix, one secondary breakdown line (input, output, cache, reasoning, sessions, steps), reset countdown for the daily row only. No usage bar: there is no quota to fill.
 - **Issue line**: symbolic icon + secondary text; text between backticks renders in monospace.
 
 ## Copy
